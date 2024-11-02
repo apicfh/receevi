@@ -1,5 +1,5 @@
 export default function Chats() {
     return (
-        <div>Select any contact</div>
+        <div>Seleziona un contatto</div>
     )
 }
