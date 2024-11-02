@@ -24,8 +24,8 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>Receevi</title>
-        <meta name="description" content="Whatsapp Cloud API Webhook" />
+        <title>CFH Receevi</title>
+        <meta name="description" content="Aggregatore whatsapp" />
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body>
