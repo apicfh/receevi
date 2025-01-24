@@ -185,7 +185,7 @@ async function sendWhatsAppMessage(to: string, message: string | null | undefine
     }
     const headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}'
+        'Authorization': `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`
     };
     const res = await fetch(WHATSAPP_API_URL, {
         method: 'POST',
