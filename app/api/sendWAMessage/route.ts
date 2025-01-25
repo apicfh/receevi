@@ -6,7 +6,6 @@ import { TemplateRequest, TextParameter } from "@/types/message-template-request
 import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
-    const supabase = createClient()
     // const {
     //     data: { user },
     // } = await supabase.auth.getUser()
@@ -25,6 +24,7 @@ export async function POST(request: NextRequest) {
         return new NextResponse('Invalid or expired token', { status: 403 });
     }
 
+    const supabase = createClient()
     const reqFormData = await request.formData()
     const message = reqFormData.get('message')?.toString()
     const fileType = reqFormData.get('fileType')?.toString()
