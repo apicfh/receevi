@@ -10,12 +10,12 @@ module.exports = {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
-  experimental: {
-    serverActions: {
-      allowedOrigins: ["*"],
-      allowedForwardedHosts: ["*"]
-    }
-  }
+  // experimental: {
+  //   serverActions: {
+  //     allowedOrigins: ["*"],
+  //     allowedForwardedHosts: ["*"]
+  //   }
+  // }
 }
 
 module.exports = nextConfig
