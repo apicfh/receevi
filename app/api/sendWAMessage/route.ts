@@ -1,4 +1,4 @@
-import {sendWhatsAppMessage} from "@/app/api/sendMessage/route";
+import { sendWhatsAppMessage } from "@/app/api/sendMessage/sendMessage";
 import { NextRequest, NextResponse } from "next/server";
 import { DBTables } from "@/lib/enums/Tables";
 import { createClient } from "@/utils/supabase-server";

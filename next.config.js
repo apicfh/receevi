@@ -1,8 +1,5 @@
 // next.config.js
 module.exports = {
-  experimental: {
-    appDir: true,
-  },
   i18n: {
     locales: ['en', 'it'],
     defaultLocale: 'it', // Imposta italiano come lingua predefinita
