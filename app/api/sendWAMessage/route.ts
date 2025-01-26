@@ -32,6 +32,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient()
     const reqFormData = await request.formData()
+    //set hotelId
+    const hotelId = reqFormData.get('hotelId')?.toString()
+    runtimeConfig.setAccountId(hotelId);
+
     const message = reqFormData.get('message')?.toString()
     const fileType = reqFormData.get('fileType')?.toString()
     const file: (File | null) = reqFormData.get('file') as (File | null)
