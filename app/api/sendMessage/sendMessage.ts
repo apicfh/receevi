@@ -2,7 +2,6 @@ import { DBTables } from "@/lib/enums/Tables";
 import { createServiceClient } from "@/lib/supabase/service-client";
 import { TemplateRequest, TextParameter } from "@/types/message-template-request";
 import { MessageTemplate, MessageTemplateComponent } from "@/types/message-template";
-import { env } from "process";
 
 type Media = {
     id?: string;
@@ -93,7 +92,7 @@ function replaceVarsInTemplate(components: MessageTemplateComponent[], vars: Tem
 }
 
 async function uploadFile(file: File, to: string) {
-    const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${env.WHATSAPP_API_PHONE_NUMBER_ID}/media`;
+    const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${process.env.WHATSAPP_API_PHONE_NUMBER_ID}/media`;
     const headers = {
         'Authorization': `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`
     };
@@ -132,7 +131,7 @@ async function uploadFile(file: File, to: string) {
 }
 
 export async function sendWhatsAppMessage(to: string, message: string | null | undefined, fileType: string | undefined | null, file: File | undefined | null, template: TemplateRequest | undefined | null) {  
-    const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${env.WHATSAPP_API_PHONE_NUMBER_ID}/messages`;
+    const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${process.env.WHATSAPP_API_PHONE_NUMBER_ID}/messages`;
     const payload: Message = {
         messaging_product: "whatsapp",
         recipient_type: "individual",
