@@ -9,8 +9,8 @@ export async function POST(request: NextRequest) {
 
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*',
     };
 
     // Handle CORS preflight requests
