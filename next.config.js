@@ -7,7 +7,7 @@ module.exports = {
 };
 
 const nextConfig = {
-  output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
+  output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined
   // async headers() {
   //   return [
   //     {
