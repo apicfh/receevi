@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
     // if (!message && !file && !template) {
     //     return new NextResponse(null, { status: 400 })
     // }
-    const template = getTemplateRequest(name,"it_IT",quoteGuid)
+    const languageCode = "it-IT";
+    const template = getTemplateRequest(name,languageCode,quoteGuid)
     await sendWhatsAppMessage(to, message, fileType, file, template)
     let { error } = await supabase
         .from(DBTables.Contacts)
@@ -75,11 +76,11 @@ function verifyToken(token: string): boolean {
     }
 }
 
-function getTemplateRequest(name : string, language:string, quoteGuid: string) : TemplateRequest{
+function getTemplateRequest(name : string, languageCode:string, quoteGuid: string) : TemplateRequest{
     const templateRequest: TemplateRequest = {
         name: "modello_invio_preventivo_standard",
         language: {
-            code: language.split("-")[0]
+            code: languageCode.split("-")[0]
         },
         components: [
             {
@@ -98,7 +99,7 @@ function getTemplateRequest(name : string, language:string, quoteGuid: string) :
                 parameters: [
                     {
                         type : "payload",
-                        payload : language + "/Quotation?guid=" + language +"="+ quoteGuid
+                        payload : languageCode + "/Quotation?guid=" + quoteGuid
                     }
                 ]
             }
