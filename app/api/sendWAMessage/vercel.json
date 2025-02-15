@@ -1,0 +1,31 @@
+{
+  "functions": {
+    "api/sendWAMessage.js": {
+      "runtime": "nodejs20.x",
+      "memory": 1024,
+      "maxDuration": 10,
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/sendWAMessage",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"  // O specifica un dominio se necessario
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ]
+}
