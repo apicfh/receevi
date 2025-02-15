@@ -77,7 +77,7 @@ function verifyToken(token: string): boolean {
 
 function getTemplateRequest(name : string, language:string, quoteGuid: string) : TemplateRequest{
     const templateRequest: TemplateRequest = {
-        name: "invio_preventivo_standard",
+        name: "modello_invio_preventivo_standard",
         language: {
             code: language.split("-")[0]
         },
