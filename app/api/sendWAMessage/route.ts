@@ -6,27 +6,30 @@ import { TemplateRequest, TextParameter } from "@/types/message-template-request
 import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
+
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    };
+
     // Handle CORS preflight requests
     if (request.method === 'OPTIONS') {
         return new NextResponse(null, {
             status: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-            },
+            headers: corsHeaders,
         });
     }
 
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
-        return new NextResponse('Missing Authorization header', { status: 401 });
+        return new NextResponse('Missing Authorization header', { status: 401, headers: corsHeaders });
     }
 
     const token = authHeader.replace('Bearer ', '').trim();
     const isValidToken = await verifyToken(token);
     if (!isValidToken) {
-        return new NextResponse('Invalid or expired token', { status: 403 });
+        return new NextResponse('Invalid or expired token', { status: 403, headers: corsHeaders });
     }
 
     const supabase = createClient();
@@ -34,17 +37,17 @@ export async function POST(request: NextRequest) {
 
     const to = reqFormData.get('Phone')?.toString();
     if (!to) {
-        return new NextResponse('Missing "Phone" field', { status: 400 });
+        return new NextResponse('Missing "Phone" field', { status: 400, headers: corsHeaders });
     }
 
     const name = reqFormData.get('Name')?.toString();
     if (!name) {
-        return new NextResponse('Missing "Name" field', { status: 400 });
+        return new NextResponse('Missing "Name" field', { status: 400, headers: corsHeaders });
     }
 
     const quoteGuid = reqFormData.get('PreventivoGuid')?.toString();
     if (!quoteGuid) {
-        return new NextResponse('Missing "PreventivoGuid" field', { status: 400 });
+        return new NextResponse('Missing "PreventivoGuid" field', { status: 400, headers: corsHeaders });
     }
 
     const message = reqFormData.get('message')?.toString();
@@ -65,11 +68,7 @@ export async function POST(request: NextRequest) {
 
     return new NextResponse(null, {
         status: 200,
-        headers: {
-            'Access-Control-Allow-Origin': '*', // Allow all origins
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-        },
+        headers: corsHeaders
     });
 }
 
