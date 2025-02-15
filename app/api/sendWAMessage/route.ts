@@ -5,13 +5,18 @@ import { createClient } from "@/utils/supabase-server";
 import { TemplateRequest, TextParameter } from "@/types/message-template-request";
 import jwt from 'jsonwebtoken';
 
-export async function POST(request: NextRequest, response: NextResponse) {
-
-    // Set CORS headers to allow any origin
-    // const response = NextResponse.next();
-    response.headers.set('Access-Control-Allow-Origin', '*');  // Allow requests from any origin
-    response.headers.set('Access-Control-Allow-Methods', 'POST');  // Allow the necessary HTTP methods
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');  // Allow the required headers
+export async function POST(request: NextRequest) {
+    // Handle CORS preflight requests
+    if (request.method === 'OPTIONS') {
+        return new NextResponse(null, {
+            status: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+            },
+        });
+    }
 
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
@@ -24,46 +29,48 @@ export async function POST(request: NextRequest, response: NextResponse) {
         return new NextResponse('Invalid or expired token', { status: 403 });
     }
 
-    const supabase = createClient()
-    const reqFormData = await request.formData()
+    const supabase = createClient();
+    const reqFormData = await request.formData();
 
-    const to = reqFormData.get('Phone')?.toString()
+    const to = reqFormData.get('Phone')?.toString();
     if (!to) {
-        return new NextResponse('Missing "Phone" field', { status: 400 })
+        return new NextResponse('Missing "Phone" field', { status: 400 });
     }
 
-    const name = reqFormData.get('Name')?.toString()
+    const name = reqFormData.get('Name')?.toString();
     if (!name) {
-        return new NextResponse('Missing "Name" field', { status: 400 })
+        return new NextResponse('Missing "Name" field', { status: 400 });
     }
 
-    const quoteGuid = reqFormData.get('PreventivoGuid')?.toString()
+    const quoteGuid = reqFormData.get('PreventivoGuid')?.toString();
     if (!quoteGuid) {
-        return new NextResponse('Missing "PreventivoGuid" field', { status: 400 })
+        return new NextResponse('Missing "PreventivoGuid" field', { status: 400 });
     }
 
-    const message = reqFormData.get('message')?.toString()
-    const fileType = reqFormData.get('fileType')?.toString()
-    const file: (File | null) = reqFormData.get('file') as (File | null)
+    const message = reqFormData.get('message')?.toString();
+    const fileType = reqFormData.get('fileType')?.toString();
+    const file: File | null = reqFormData.get('file') as File | null;
 
-    // const reqFormDataTemplate = reqFormData.get('template')?.toString()
-    // const template: (TemplateRequest | null | undefined) = reqFormDataTemplate && JSON.parse(reqFormDataTemplate)
+    const languageCode = 'it-IT';
+    const template = getTemplateRequest(name, languageCode, quoteGuid);
     
+    await sendWhatsAppMessage(to, message, fileType, file, template);
 
-    // if (!message && !file && !template) {
-    //     return new NextResponse(null, { status: 400 })
-    // }
-    const languageCode = "it-IT";
-    const template = getTemplateRequest(name,languageCode,quoteGuid)
-    await sendWhatsAppMessage(to, message, fileType, file, template)
     let { error } = await supabase
         .from(DBTables.Contacts)
-        .update({
-            last_message_at: new Date(),
-        })
-        .eq('wa_id', to)
-    if (error) console.error('error while updating last message field')
-    return new NextResponse()
+        .update({ last_message_at: new Date() })
+        .eq('wa_id', to);
+
+    if (error) console.error('Error while updating last message field:', error);
+
+    return new NextResponse(null, {
+        status: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*', // Allow all origins
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        },
+    });
 }
 
 function verifyToken(token: string): boolean {
