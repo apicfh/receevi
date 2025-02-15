@@ -6,12 +6,6 @@ import { TemplateRequest, TextParameter } from "@/types/message-template-request
 import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
-    // const {
-    //     data: { user },
-    // } = await supabase.auth.getUser()
-    // if (!user) {
-    //     return new NextResponse(null, { status: 401 })
-    // }
 
     // Set CORS headers to allow any origin
     const response = NextResponse.next();
@@ -32,23 +26,34 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient()
     const reqFormData = await request.formData()
-    //set hotelId
-    const hotelId = reqFormData.get('hotelId')?.toString()
-    runtimeConfig.setAccountId(hotelId);
+
+    const to = reqFormData.get('Phone')?.toString()
+    if (!to) {
+        return new NextResponse('Missing "Phone" field', { status: 400 })
+    }
+
+    const name = reqFormData.get('Name')?.toString()
+    if (!name) {
+        return new NextResponse('Missing "Name" field', { status: 400 })
+    }
+
+    const quoteGuid = reqFormData.get('PreventivoGuid')?.toString()
+    if (!quoteGuid) {
+        return new NextResponse('Missing "PreventivoGuid" field', { status: 400 })
+    }
 
     const message = reqFormData.get('message')?.toString()
     const fileType = reqFormData.get('fileType')?.toString()
     const file: (File | null) = reqFormData.get('file') as (File | null)
 
-    const reqFormDataTemplate = reqFormData.get('template')?.toString()
-    const template: (TemplateRequest | null | undefined) = reqFormDataTemplate && JSON.parse(reqFormDataTemplate)
-    const to = reqFormData.get('to')?.toString()
-    if (!to) {
-        return new NextResponse(null, { status: 400 })
-    }
-    if (!message && !file && !template) {
-        return new NextResponse(null, { status: 400 })
-    }
+    // const reqFormDataTemplate = reqFormData.get('template')?.toString()
+    // const template: (TemplateRequest | null | undefined) = reqFormDataTemplate && JSON.parse(reqFormDataTemplate)
+    
+
+    // if (!message && !file && !template) {
+    //     return new NextResponse(null, { status: 400 })
+    // }
+    const template = getTemplateRequest(name,"it_IT",quoteGuid)
     await sendWhatsAppMessage(to, message, fileType, file, template)
     let { error } = await supabase
         .from(DBTables.Contacts)
@@ -68,5 +73,38 @@ function verifyToken(token: string): boolean {
         console.error('Token verification failed:', err);
         return false; // Token is invalid
     }
+}
+
+function getTemplateRequest(name : string, language:string, quoteGuid: string) : TemplateRequest{
+    const templateRequest: TemplateRequest = {
+        name: "invio_preventivo_standard",
+        language: {
+            code: language.split("-")[0]
+        },
+        components: [
+            {
+                type: "header",
+                parameters: [
+                    {
+                        type: "text",
+                        text: name
+                    }
+                ]
+            },
+            {
+                type: "button",
+                sub_type: "url",
+                index: "0",
+                parameters: [
+                    {
+                        type : "payload",
+                        payload : language + "/Quotation?guid=" + language +"="+ quoteGuid
+                    }
+                ]
+            }
+        ]
+    };
+
+    return templateRequest;
 }
 
