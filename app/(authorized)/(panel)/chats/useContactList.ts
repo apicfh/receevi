@@ -36,7 +36,7 @@ export function useContactList(search: string, active: boolean) {
     const fetchedUntil = useRef<string | null>(null);
     const noMore = useRef<boolean>(false);
     const pageSize = 100
-    const getContacts = useCallback(async (active: boolean, before: string | undefined = undefined) => {
+    const getContacts = useCallback(async (active: boolean, before: string | undefined = undefined, selectedHotelZoneId : number | undefined = undefined) => {
         let query = supabase
             .from(DBTables.Contacts)
             .select('*')
@@ -55,6 +55,7 @@ export function useContactList(search: string, active: boolean) {
         if (error) {
             throw error
         }
+
         return addTimeSince(data);
     }, [supabase])
     const loadMore = useCallback(async () => {
@@ -92,7 +93,7 @@ export function useContactList(search: string, active: boolean) {
 
     useEffect(() => {
         setIsLoading(true)
-        getContacts(active).then((contacts) => {
+        getContacts(active, undefined).then((contacts) => {
             setContacts(contacts)
             if (contacts.length > 0) {
                 fetchedUntil.current = contacts[contacts.length - 1].last_message_at

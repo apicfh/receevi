@@ -121,7 +121,7 @@ export default function ContactChat({ params }: { params: { wa_id: string } }) {
                         } else {
                             return (
                                 <div className="flex flex-col justify-center items-center h-full gap-2">
-                                    <CircleAlertIcon/>
+                                    <CircleAlertIcon />
                                     <span className="text-lg">Chat does not exists</span>
                                 </div>
                             )

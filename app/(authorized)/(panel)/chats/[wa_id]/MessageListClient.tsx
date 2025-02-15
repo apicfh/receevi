@@ -11,6 +11,8 @@ import ReceivedTemplateMessageUI from "./ReceivedTemplateMessageUI"
 import { markAsRead } from "./markAsRead"
 import ReceivedVideoMessageUI from "./ReceivedVideoMessageUI"
 import ReceivedDocumentMessageUI from "./ReceivedDocumentMessageUI"
+import { getHotelsZone } from "../HotelZones"
+import { runtimeConfig } from "@/types/runtimeConfig"
 
 type UIMessageModel = DBMessage & {
     msgDate: string
@@ -28,6 +30,7 @@ function addDateToMessages(withoutDateArray: DBMessage[]): UIMessageModel[] {
 
 export default function MessageListClient({ from }: { from: string }) {
     const [supabase] = useState(() => createClient())
+    //const [hotelsZones, selectedHotelZoneId, setselectedHotelZoneId] = getHotelsZone()
     const [stateMessages, setMessages] = useState<UIMessageModel[]>(addDateToMessages([]))
     const [additionalMessagesLoading, setAdditionalMessagesLoading] = useState<boolean>(false)
     const [noMoreMessages, setNoMoreMessages] = useState<boolean>(false)
@@ -40,9 +43,11 @@ export default function MessageListClient({ from }: { from: string }) {
     }
 
     async function fetchMessages(before: string | null = null) {
+        //console.log(selectedHotelZoneId)
         const query = supabase
             .from(DBTables.Messages)
             .select('*')
+            .eq('hotel_zone', runtimeConfig.getSelectedZone()?.zone_id)
             .eq('chat_id', from)
             .limit(1000)
             .order('created_at', { ascending: false })
@@ -86,9 +91,9 @@ export default function MessageListClient({ from }: { from: string }) {
                     }
                 })
                 .subscribe()
-                return () => { supabase.removeChannel(channel) }
+            return () => { supabase.removeChannel(channel) }
         }
-        return () => {}
+        return () => { }
     }, [supabase, stateMessages, setMessages])
 
     useEffect(() => {

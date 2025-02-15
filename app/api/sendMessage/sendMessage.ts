@@ -2,6 +2,7 @@ import { DBTables } from "@/lib/enums/Tables";
 import { createServiceClient } from "@/lib/supabase/service-client";
 import { TemplateRequest, TextParameter } from "@/types/message-template-request";
 import { MessageTemplate, MessageTemplateComponent } from "@/types/message-template";
+import { dynamicEnv } from "@/types/dynamicEnv";
 
 type Media = {
     id?: string;
@@ -130,7 +131,7 @@ async function uploadFile(file: File, to: string) {
     return [response.id, data.path];
 }
 
-export async function sendWhatsAppMessage(to: string, message: string | null | undefined, fileType: string | undefined | null, file: File | undefined | null, template: TemplateRequest | undefined | null) {  
+export async function sendWhatsAppMessage(to: string, message: string | null | undefined, fileType: string | undefined | null, file: File | undefined | null, template: TemplateRequest | undefined | null, hotelZone : number) {  
     const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${dynamicEnv.WHATSAPP_API_PHONE_NUMBER_ID}/messages`;
     const payload: Message = {
         messaging_product: "whatsapp",
@@ -219,6 +220,7 @@ export async function sendWhatsAppMessage(to: string, message: string | null | u
             wam_id: wamId,
             chat_id: Number.parseInt(response.contacts[0].wa_id),
             media_url: mediaUrl,
+            hotelZone: hotelZone
         })
     console.log(supabaseResponse)
 }
