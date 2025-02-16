@@ -10,4 +10,5 @@ type DBMessage = {
     read_by_user_at: string | null
     sent_at: string | null
     wam_id: string
+    hotel_zone: number
   }

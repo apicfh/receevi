@@ -4,4 +4,6 @@ export enum DBTables {
     Messages = 'messages',
     MessageTemplate = 'message_template',
     Setup = 'setup',
+    HotelsZones = 'hotel_zones',
+    Hotels = 'hotels'
 }

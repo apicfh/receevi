@@ -130,8 +130,34 @@ async function uploadFile(file: File, to: string) {
     return [response.id, data.path];
 }
 
-export async function sendWhatsAppMessage(to: string, message: string | null | undefined, fileType: string | undefined | null, file: File | undefined | null, template: TemplateRequest | undefined | null) {  
-    const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${process.env.WHATSAPP_API_PHONE_NUMBER_ID}/messages`;
+export async function sendWhatsAppMessage(to: string, message: string | null | undefined, fileType: string | undefined | null, file: File | undefined | null, template: TemplateRequest | undefined | null, hotelZone: number | null) {  
+    
+    const supabase = createServiceClient();
+    let numberId = process.env.WHATSAPP_API_PHONE_NUMBER_ID;
+
+    if (hotelZone != null){
+        let { data: hotelZonesData, error: hotelZonesError } = await supabase
+        .from(DBTables.HotelsZones)
+        .select('whatsapp_number_id')
+        .eq('zone_id', hotelZone)
+        .single();
+
+        if (hotelZonesError) {
+            return new Error("Error fetching hotel zone data: " + hotelZonesError);
+        } else if (!hotelZonesData) {
+            return new Error("No matching row found for zone_id " + hotelZone);
+        } else {
+            if (hotelZonesData.whatsapp_number_id != "")
+                {
+                numberId = hotelZonesData.whatsapp_number_id;
+            }
+            else{
+                return new Error("Hotel zone phone number empty");
+            }
+        }
+    }
+
+    const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${numberId}/messages`;
     const payload: Message = {
         messaging_product: "whatsapp",
         recipient_type: "individual",
@@ -201,7 +227,7 @@ export async function sendWhatsAppMessage(to: string, message: string | null | u
     const response = await res.json()
     const wamId = response.messages[0].id;
     msgToPut['id'] = wamId
-    const supabase = createServiceClient()
+
     if (payload.template) {
         const { data: templateArrFromDB } = await supabase
             .from('message_template')
@@ -220,6 +246,7 @@ export async function sendWhatsAppMessage(to: string, message: string | null | u
             wam_id: wamId,
             chat_id: Number.parseInt(response.contacts[0].wa_id),
             media_url: mediaUrl,
+            hotel_zone: hotelZone
         })
     console.log(supabaseResponse)
 }

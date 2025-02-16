@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
         const contacts = changeValue.contacts;
         const messages = changeValue.messages;
         const statuses = changeValue.statuses;
+        const phoneNumberId = changeValue.metadata.phone_number_id;
         if (contacts && contacts.length > 0) {
           for (const contact of contacts) {
             let { error } = await supabase
@@ -65,7 +66,22 @@ export async function POST(request: NextRequest) {
             if (error) throw error
           }
         }
+        
         if (messages) {
+
+          let hotelZone = null
+          if (phoneNumberId){
+            let {data: hotelZonesData, error: hotelZonesError} = await supabase
+            .from(DBTables.HotelsZones)
+            .select('zone_id')
+            .eq('whatsapp_number_id', phoneNumberId)
+            .single()
+
+            if (!hotelZonesError && hotelZonesData){
+              hotelZone = hotelZonesData;
+            }
+          }
+
           let { error } = await supabase
             .from(DBTables.Messages)
             .upsert(messages.map(message => {
@@ -75,6 +91,7 @@ export async function POST(request: NextRequest) {
                 wam_id: message.id,
                 created_at: new Date(Number.parseInt(message.timestamp) * 1000),
                 is_received: true,
+                hotel_zone: hotelZone
               }
             }), { onConflict: 'wam_id', ignoreDuplicates: true })
           if (error) throw new Error("Error while inserting messages to database", { cause: error})

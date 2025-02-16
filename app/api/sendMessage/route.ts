@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     if (!message && !file && !template) {
         return new NextResponse(null, { status: 400 })
     }
-    await sendWhatsAppMessage(to, message, fileType, file, template)
+    await sendWhatsAppMessage(to, message, fileType, file, template, null)
     let { error } = await supabase
         .from(DBTables.Contacts)
         .update({

@@ -55,22 +55,40 @@ export async function POST(request: NextRequest) {
         return new NextResponse('Missing "PreventivoGuid" field', { status: 400, headers: corsHeaders });
     }
 
+    const hotelId = reqFormData.get('HotelId')?.toString();
+    if (!hotelId) {
+        return new NextResponse('Missing "hotelId" field', { status: 400, headers: corsHeaders });
+    }
+
     const message = reqFormData.get('message')?.toString();
     const fileType = reqFormData.get('fileType')?.toString();
     const file: File | null = reqFormData.get('file') as File | null;
 
     const languageCode = 'it-IT';
-    const template = getTemplateRequest(firstName, languageCode, quoteGuid);
-    
-    await sendWhatsAppMessage(to, message, fileType, file, template);
 
-    let { data, error } = await supabase
+    let { data: hotelData, error: hotelError } = await supabase
+    .from(DBTables.Hotels)
+    .select('*')
+    .eq('hotel_id', hotelId)
+    .single();
+
+    let hotelZone = hotelData.hotel_zone;
+    let preventivoName = hotelData.template_preventivo_name;
+
+    let template = await getTemplateRequest(firstName, languageCode, quoteGuid,preventivoName);
+    
+    let error = await sendWhatsAppMessage(to, message, fileType, file, template,hotelZone);
+    if (error){
+        return new NextResponse(error.message, { status: 400, headers: corsHeaders });
+    }
+
+    let { data: contactsData, error: contactsError } = await supabase
                           .from(DBTables.Contacts)
                           .select('wa_id')
                           .eq('wa_id', to)
                           .single();
-    if (error) console.error('Error while fetching contact or contact not in list:', error);
-    let contactInList = data != null;
+    if (contactsError) console.error('Error while fetching contact or contact not in list:', contactsError);
+    let contactInList = contactsData != null;
 
     if (contactInList)
     {
@@ -112,9 +130,10 @@ function verifyToken(token: string): boolean {
     }
 }
 
-function getTemplateRequest(firstName : string, languageCode:string, quoteGuid: string) : TemplateRequest{
+function getTemplateRequest(firstName : string, languageCode:string, quoteGuid: string, preventivoName: string) : TemplateRequest{
+
     const templateRequest: TemplateRequest = {
-        name: "modello_invio_preventivo_standard",
+        name: preventivoName,
         language: {
             code: languageCode.split("-")[0]
         },
