@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     if (error) console.error('Error while updating last message field:', error);
 
-    return new NextResponse(null, {
+    return new NextResponse('Whatsapp message sent', {
         status: 200,
         headers: corsHeaders
     });
