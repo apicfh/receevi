@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         
         if (messages) {
 
-          let hotelZone = null
+          let hotelZone: number | null = null;
           if (phoneNumberId){
             let {data: hotelZonesData, error: hotelZonesError} = await supabase
             .from(DBTables.HotelsZones)
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
             .single()
 
             if (!hotelZonesError && hotelZonesData){
-              hotelZone = hotelZonesData;
+              hotelZone = hotelZonesData.zone_id;
             }
           }
 
