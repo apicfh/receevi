@@ -8,9 +8,9 @@ import jwt from 'jsonwebtoken';
 export async function POST(request: NextRequest) {
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': 'https://secure.hoteldoor.it',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*'
     };
 
     // Handle CORS preflight requests
