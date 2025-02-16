@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
         return new NextResponse('Missing "Phone" field', { status: 400, headers: corsHeaders });
     }
 
-    const firstName = reqFormData.get('Name')?.toString();
+    const firstName = reqFormData.get('FirstName')?.toString();
     if (!firstName) {
-        return new NextResponse('Missing "Name" field', { status: 400, headers: corsHeaders });
+        return new NextResponse('Missing "FirstName" field', { status: 400, headers: corsHeaders });
     }
 
-    const lastName = reqFormData.get('Name')?.toString();
+    const lastName = reqFormData.get('LastName')?.toString();
     if (!lastName) {
-        return new NextResponse('Missing "Name" field', { status: 400, headers: corsHeaders });
+        return new NextResponse('Missing "LastName" field', { status: 400, headers: corsHeaders });
     }
 
     const quoteGuid = reqFormData.get('PreventivoGuid')?.toString();
