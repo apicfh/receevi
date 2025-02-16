@@ -40,8 +40,13 @@ export async function POST(request: NextRequest) {
         return new NextResponse('Missing "Phone" field', { status: 400, headers: corsHeaders });
     }
 
-    const name = reqFormData.get('Name')?.toString();
-    if (!name) {
+    const firstName = reqFormData.get('Name')?.toString();
+    if (!firstName) {
+        return new NextResponse('Missing "Name" field', { status: 400, headers: corsHeaders });
+    }
+
+    const lastName = reqFormData.get('Name')?.toString();
+    if (!lastName) {
         return new NextResponse('Missing "Name" field', { status: 400, headers: corsHeaders });
     }
 
@@ -55,16 +60,41 @@ export async function POST(request: NextRequest) {
     const file: File | null = reqFormData.get('file') as File | null;
 
     const languageCode = 'it-IT';
-    const template = getTemplateRequest(name, languageCode, quoteGuid);
+    const template = getTemplateRequest(firstName, languageCode, quoteGuid);
     
     await sendWhatsAppMessage(to, message, fileType, file, template);
 
-    let { error } = await supabase
-        .from(DBTables.Contacts)
-        .update({ last_message_at: new Date() })
-        .eq('wa_id', to);
+    let { data, error } = await supabase
+                          .from(DBTables.Contacts)
+                          .select('wa_id')
+                          .eq('wa_id', to)
+                          .single();
+    if (error) console.error('Error while fetching contact or contact not in list:', error);
+    let contactInList = data != null;
 
-    if (error) console.error('Error while updating last message field:', error);
+    if (contactInList)
+    {
+        let { error } = await supabase
+                        .from(DBTables.Contacts)
+                        .update({ last_message_at: new Date() })
+                        .eq('wa_id', to);
+
+        if (error) console.error('Error while updating contact:', error);
+
+    }
+    else
+    {
+        let { error } = await supabase
+                        .from(DBTables.Contacts)
+                        .upsert({
+                        wa_id: to,
+                        profile_name: firstName + " " + lastName,
+                        last_message_at: new Date(),
+                        last_message_received_at: new Date(),
+                        in_chat: true
+                        })
+        if (error) console.error('Error while adding contact:', error);
+    }
 
     return new NextResponse('Whatsapp message sent', {
         status: 200,
@@ -82,7 +112,7 @@ function verifyToken(token: string): boolean {
     }
 }
 
-function getTemplateRequest(name : string, languageCode:string, quoteGuid: string) : TemplateRequest{
+function getTemplateRequest(firstName : string, languageCode:string, quoteGuid: string) : TemplateRequest{
     const templateRequest: TemplateRequest = {
         name: "modello_invio_preventivo_standard",
         language: {
@@ -94,7 +124,7 @@ function getTemplateRequest(name : string, languageCode:string, quoteGuid: strin
                 parameters: [
                     {
                         type: "text",
-                        text: name
+                        text: firstName
                     }
                 ]
             },

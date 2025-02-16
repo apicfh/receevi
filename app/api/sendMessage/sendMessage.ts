@@ -190,6 +190,7 @@ export async function sendWhatsAppMessage(to: string, message: string | null | u
         headers,
         body: JSON.stringify(payload)
     });
+    console.log("Whatsapp sent status: " + res.status);
     if (!res.ok) {
         const responseStatus = await res.status
         const response = await res.text()
