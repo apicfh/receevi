@@ -9,6 +9,7 @@ export type Contact = {
     in_chat: boolean,
     unread_count: number | null,
     assigned_to: string | null,
+    email: string | null
 }
 
 

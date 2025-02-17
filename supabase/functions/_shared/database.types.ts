@@ -161,7 +161,7 @@ export type Database = {
           assigned_to: string | null
           created_at: string | null
           email: string | null
-          in_chat: boolean | null
+          in_chat: boolean
           last_message_at: string | null
           last_message_received_at: string | null
           profile_name: string | null
@@ -173,7 +173,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string | null
           email?: string | null
-          in_chat?: boolean | null
+          in_chat?: boolean
           last_message_at?: string | null
           last_message_received_at?: string | null
           profile_name?: string | null
@@ -185,7 +185,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string | null
           email?: string | null
-          in_chat?: boolean | null
+          in_chat?: boolean
           last_message_at?: string | null
           last_message_received_at?: string | null
           profile_name?: string | null
