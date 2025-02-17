@@ -1,15 +1,15 @@
 'use client'
 
 import { createContext, Dispatch, ReactElement, Reducer, useContext, useReducer } from "react";
-import { Contact } from "@/types/contact";
+import { ContactLastMessages } from "@/types/contact";
 
 type ContactState = {
-    current?: Contact,
+    current?: ContactLastMessages,
 }
 
 type Action = {
     type: string,
-    contact: Contact,
+    contact: ContactLastMessages,
 }
 
 export const UPDATE_CURRENT_CONTACT = 'UPDATE_CURRENT_CONTACT'
@@ -27,7 +27,7 @@ export const CurrentContactContext = createContext<ContactState | null>(null)
 export const CurrentContactDispatchContext = createContext<Dispatch<Action> | null>(null)
 
 export function ContactContextProvider({ children }: { children: ReactElement }) {
-    const [state, dispatch] = useReducer(reducer, { });
+    const [state, dispatch] = useReducer(reducer, {});
     return (
         <CurrentContactContext.Provider value={state}>
             <CurrentContactDispatchContext.Provider value={dispatch}>

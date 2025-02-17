@@ -160,37 +160,67 @@ export type Database = {
         Row: {
           assigned_to: string | null
           created_at: string | null
-          in_chat: boolean
-          last_message_at: string | null
-          last_message_received_at: string | null
           profile_name: string | null
           tags: string[] | null
-          unread_count: number | null
           wa_id: number
         }
         Insert: {
           assigned_to?: string | null
           created_at?: string | null
-          in_chat?: boolean
-          last_message_at?: string | null
-          last_message_received_at?: string | null
           profile_name?: string | null
           tags?: string[] | null
-          unread_count?: number | null
           wa_id: number
         }
         Update: {
           assigned_to?: string | null
           created_at?: string | null
-          in_chat?: boolean
-          last_message_at?: string | null
-          last_message_received_at?: string | null
           profile_name?: string | null
           tags?: string[] | null
-          unread_count?: number | null
           wa_id?: number
         }
         Relationships: []
+      }
+      contacts_last_messages: {
+        Row: {
+          in_chat: boolean
+          last_message_at: string | null
+          last_message_received_at: string | null
+          unread_count: number | null
+          wa_id: number
+          zone_id: number
+        }
+        Insert: {
+          in_chat?: boolean
+          last_message_at?: string | null
+          last_message_received_at?: string | null
+          unread_count?: number | null
+          wa_id: number
+          zone_id: number
+        }
+        Update: {
+          in_chat?: boolean
+          last_message_at?: string | null
+          last_message_received_at?: string | null
+          unread_count?: number | null
+          wa_id?: number
+          zone_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_last_messages_wa_id_fkey"
+            columns: ["wa_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["wa_id"]
+          },
+          {
+            foreignKeyName: "contacts_last_messages_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "hotel_zones"
+            referencedColumns: ["zone_id"]
+          },
+        ]
       }
       hotel_zones: {
         Row: {

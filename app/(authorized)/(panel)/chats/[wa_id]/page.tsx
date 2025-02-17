@@ -7,7 +7,7 @@ import SendMessageWrapper from "./SendMessageWrapper";
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase-browser";
 import ContactBrowserFactory from "@/lib/repositories/contacts/ContactBrowserFactory";
-import { Contact } from "@/types/contact";
+import { ContactInfo, ContactLastMessages } from "@/types/contact";
 import { Button } from "@/components/ui/button";
 import TemplateSelection from "@/components/ui/template-selection";
 import { TemplateRequest } from "@/types/message-template-request";
@@ -24,12 +24,21 @@ export default function ContactChat({ params }: { params: { wa_id: string } }) {
     const [contactRepository] = useState(() => ContactBrowserFactory.getInstance())
     const [supabase] = useState(() => createClient())
     const [messageTemplateSending, setMessageTemplateSending] = useState<boolean>(false);
-    const [contact, setContact] = useState<Contact | undefined>();
+    const [contact, setContact] = useState<ContactLastMessages | undefined>();
+    const [contactInfo, setContactInfo] = useState<ContactInfo | undefined>();
     const setCurrentContact = useCurrentContactDispatch()
 
     useEffect(() => {
-        contactRepository.getContactById(params.wa_id).then((contact) => {
+        contactRepository.getContactById(params.wa_id).then(async (contact) => {
             if (contact) {
+
+                const { data: contactInfo, error: contactError } = await supabase
+                    .from('contacts') // Replace with your actual contacts table name
+                    .select('*')
+                    .eq('wa_id', params.wa_id)
+                    .single();
+                setContactInfo(contactInfo)
+
                 setContact(contact)
                 setLastMessageReceivedAt(contact.last_message_received_at ? new Date(contact.last_message_received_at) : undefined)
                 if (setCurrentContact) {
@@ -37,7 +46,7 @@ export default function ContactChat({ params }: { params: { wa_id: string } }) {
                 }
             }
         })
-    }, [contactRepository, setChatWindowOpen, params.wa_id, setLastMessageReceivedAt, setContact, setCurrentContact])
+    }, [contactRepository, setChatWindowOpen, params.wa_id, setLastMessageReceivedAt, setContact, setCurrentContact, setContactInfo])
 
     useEffect(() => {
         if (lastMessageReceivedAt) {
@@ -51,10 +60,10 @@ export default function ContactChat({ params }: { params: { wa_id: string } }) {
     useEffect(() => {
         const channel = supabase
             .channel('last-message-received-channel')
-            .on<Contact>('postgres_changes', {
+            .on<ContactLastMessages>('postgres_changes', {
                 event: 'UPDATE',
                 schema: 'public',
-                table: 'contacts',
+                table: 'contacts_last_messages',
                 filter: `wa_id=eq.${params.wa_id}`
             }, payload => {
                 if (payload.new.last_message_received_at) {
@@ -94,7 +103,7 @@ export default function ContactChat({ params }: { params: { wa_id: string } }) {
                         if (contact) {
                             return (
                                 <>
-                                    <ChatHeader contact={contact} />
+                                    <ChatHeader contact={contactInfo} />
                                     <MessageListClient from={params.wa_id} />
                                     {(() => {
                                         if (typeof isChatWindowOpen !== 'undefined' && typeof contact !== 'undefined') {
@@ -121,7 +130,7 @@ export default function ContactChat({ params }: { params: { wa_id: string } }) {
                         } else {
                             return (
                                 <div className="flex flex-col justify-center items-center h-full gap-2">
-                                    <CircleAlertIcon/>
+                                    <CircleAlertIcon />
                                     <span className="text-lg">Chat does not exists</span>
                                 </div>
                             )

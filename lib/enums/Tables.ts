@@ -5,5 +5,6 @@ export enum DBTables {
     MessageTemplate = 'message_template',
     Setup = 'setup',
     HotelsZones = 'hotel_zones',
-    Hotels = 'hotels'
+    Hotels = 'hotels',
+    ContactsLastMessages = 'contacts_last_messages'
 }

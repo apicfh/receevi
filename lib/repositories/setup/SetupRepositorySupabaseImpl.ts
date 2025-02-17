@@ -1,6 +1,6 @@
 import { DBTables } from "@/lib/enums/Tables";
 import { createClient as createBrowserClient } from "@/utils/supabase-browser";
-import { Contact } from "../../../types/contact";
+import { ContactInfo } from "../../../types/contact";
 import { AppSetup, SetupRepository } from "./SetupRepository";
 
 type SupabaseClientType = ReturnType<typeof createBrowserClient>

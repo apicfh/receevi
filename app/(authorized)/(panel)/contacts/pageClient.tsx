@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from "react"
-import { Contact } from "@/types/contact"
+import { ContactInfo } from "@/types/contact"
 import Loading from "../../../loading"
 import { AddContactDialog } from "./AddContactDialog"
 import { ContactsTable } from "./ContactsTable"
@@ -29,7 +29,7 @@ import { fetchData, itemsPerPage } from "./fetchData"
 import { AddBulkContactsDialog } from "./AddBulkContactsDialog"
 
 export default function ContactsClient() {
-    const columns = useMemo<ColumnDef<Contact>[]>(
+    const columns = useMemo<ColumnDef<ContactInfo>[]>(
         () => [
             // {
             //     id: "select",
@@ -108,7 +108,7 @@ export default function ContactsClient() {
             pageIndex: 0,
             pageSize: itemsPerPage,
         })
-    const [ searchFilter, setSearchFilter ] = useState("")
+    const [searchFilter, setSearchFilter] = useState("")
 
     const fetchDataOptions = {
         pageIndex,
@@ -136,7 +136,7 @@ export default function ContactsClient() {
         React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
 
-    const table = useReactTable<Contact>({
+    const table = useReactTable<ContactInfo>({
         data: dataQuery.data?.rows ?? defaultData,
         columns,
         manualPagination: true,
@@ -163,7 +163,7 @@ export default function ContactsClient() {
                 <Input
                     placeholder="Search name..."
                     value={searchFilter}
-                    onChange={(event) => setSearchFilter(event.target.value) }
+                    onChange={(event) => setSearchFilter(event.target.value)}
                     className="max-w-sm"
                 />
                 <div className="space-x-2">
@@ -177,7 +177,7 @@ export default function ContactsClient() {
             </div>
             <div className="rounded-md border relative">
                 {dataQuery.isLoading && <div className="absolute block w-full h-full bg-gray-500 opacity-30">
-                    <Loading/>
+                    <Loading />
                 </div>}
                 <ContactsTable table={table} totalColumns={columns.length} />
             </div>

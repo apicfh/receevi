@@ -1,11 +1,11 @@
 import { useSupabase } from "@/components/supabase-provider";
 import { DBTables } from "@/lib/enums/Tables";
 import { getTimeSince, isLessThanADay } from "@/lib/time-utils";
-import { Contact, ContactFE } from "@/types/contact";
+import { ContactLastMessages, ContactFE } from "@/types/contact";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-function sortContacts(contacts: Contact[]) {
-    contacts.sort((a: Contact, b: Contact) => {
+function sortContacts(contacts: ContactLastMessages[]) {
+    contacts.sort((a: ContactLastMessages, b: ContactLastMessages) => {
         if (!a.last_message_at || !b.last_message_at) {
             return 0;
         }
@@ -20,8 +20,8 @@ function sortContacts(contacts: Contact[]) {
     })
 }
 
-function addTimeSince(data: Contact[]): ContactFE[] {
-    return data.map((contact: Contact) => {
+function addTimeSince(data: ContactLastMessages[]): ContactFE[] {
+    return data.map((contact: ContactLastMessages) => {
         return {
             ...contact,
             timeSince: contact.last_message_at ? getTimeSince(new Date(contact.last_message_at)) : null,
@@ -29,7 +29,8 @@ function addTimeSince(data: Contact[]): ContactFE[] {
     })
 }
 
-export function useContactList(search: string, active: boolean) {
+export function useContactList(search: string, active: boolean, zoneId: number) {
+    console.log(zoneId);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [contacts, setContacts] = useState<ContactFE[]>([]);
     const { supabase } = useSupabase()
@@ -38,8 +39,9 @@ export function useContactList(search: string, active: boolean) {
     const pageSize = 100
     const getContacts = useCallback(async (active: boolean, before: string | undefined = undefined) => {
         let query = supabase
-            .from(DBTables.Contacts)
+            .from(DBTables.ContactsLastMessages)
             .select('*')
+            .eq('zone_id',zoneId)
             .filter('in_chat', 'eq', true)
             .order('last_message_at', { ascending: false })
             .limit(pageSize)
@@ -55,7 +57,9 @@ export function useContactList(search: string, active: boolean) {
         if (error) {
             throw error
         }
+
         return addTimeSince(data);
+
     }, [supabase])
     const loadMore = useCallback(async () => {
         if (fetchedUntil.current && !noMore.current && !isLoading) {
@@ -73,12 +77,12 @@ export function useContactList(search: string, active: boolean) {
                 setIsLoading(false)
             }
         }
-    }, [getContacts, fetchedUntil, isLoading, setIsLoading, active])
+    }, [getContacts, fetchedUntil, isLoading, setIsLoading, active, zoneId])
 
     useEffect(() => {
         noMore.current = false
         fetchedUntil.current = null
-    }, [active])
+    }, [active, zoneId])
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -105,15 +109,15 @@ export function useContactList(search: string, active: boolean) {
         }).finally(() => {
             setIsLoading(false)
         })
-    }, [getContacts, setContacts, setIsLoading, active]);
+    }, [getContacts, setContacts, setIsLoading, active, zoneId]);
     useEffect(() => {
         const channel = supabase.channel('chat-contacts')
-            .on<Contact>(
+            .on<ContactLastMessages>(
                 'postgres_changes',
                 {
                     event: '*',
                     schema: 'public',
-                    table: DBTables.Contacts,
+                    table: DBTables.ContactsLastMessages,
                     filter: `in_chat=eq.true`,
                 },
                 payload => {
@@ -163,8 +167,8 @@ export function useContactList(search: string, active: boolean) {
                                 }
                                 return [...existingContacts]
                             case "DELETE":
-                                const waId = (payload.old as Partial<Contact>).wa_id;
-                                const newContacts = existingContacts.filter((item: Contact) => item.wa_id != waId)
+                                const waId = (payload.old as Partial<ContactLastMessages>).wa_id;
+                                const newContacts = existingContacts.filter((item: ContactLastMessages) => item.wa_id != waId)
                                 return [...newContacts]
                             }
                         return existingContacts
@@ -173,6 +177,6 @@ export function useContactList(search: string, active: boolean) {
             )
             .subscribe()
         return () => { supabase.removeChannel(channel) };
-    }, [supabase, setContacts, active])
+    }, [supabase, setContacts, active,zoneId])
     return [contacts, loadMore, isLoading] as const;
 }

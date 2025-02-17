@@ -1,4 +1,4 @@
-import { Contact } from "../../../types/contact";
+import { ContactInfo } from "../../../types/contact";
 import { Database } from "@/lib/database.types";
 
 type FilterOperator =
@@ -25,8 +25,9 @@ type FilterOperator =
   | 'phfts'
   | 'wfts'
 
-export type ContactFromDB = Database['public']['Tables']['contacts']['Row'];
-export type ContactColumnName = string & keyof ContactFromDB;
+export type ContactFromDB = Database['public']['Tables']['contacts_last_messages']['Row'];
+export type ContactInfoFromDB = Database['public']['Tables']['contacts']['Row'];
+export type ContactColumnName = string & keyof ContactInfoFromDB;
 export type ContactFilterArray = Array<{ column: ContactColumnName, operator: FilterOperator, value: unknown}>
 
 export interface ContactRepository {
@@ -38,7 +39,7 @@ export interface ContactRepository {
         },
         paginationOptions?: { limit: number, offset: number},
         fetchCount?: boolean,
-    ): Promise<{ rows: Contact[], itemsCount: number | null }>
+    ): Promise<{ rows: ContactInfo[], itemsCount: number | null }>
 
     getContactsHavingTag(tags: string[]): Promise<ContactFromDB[]>
     getContactById(contactId: string): Promise<ContactFromDB>

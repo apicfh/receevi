@@ -1,6 +1,6 @@
 import { DBTables } from "@/lib/enums/Tables";
 import { createClient as createBrowserClient } from "@/utils/supabase-browser";
-import { Contact } from "../../../types/contact";
+import { ContactInfo, ContactLastMessages } from "../../../types/contact";
 import { ContactColumnName, ContactFilterArray, ContactFromDB, ContactRepository } from "./ContactRepository";
 
 type SupabaseClientType = ReturnType<typeof createBrowserClient>
@@ -18,7 +18,7 @@ export class ContactRepositorySupabaseImpl implements ContactRepository {
         },
         paginationOptions?: { limit: number, offset: number },
         fetchCount?: boolean,
-    ): Promise<{ rows: Contact[], itemsCount: number | null }> {
+    ): Promise<{ rows: ContactInfo[], itemsCount: number | null }> {
         let selectOptions = {}
         if (fetchCount) {
             selectOptions = { count: 'exact' }

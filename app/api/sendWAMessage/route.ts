@@ -77,10 +77,10 @@ export async function POST(request: NextRequest) {
 
     let template = await getTemplateRequest(firstName, languageCode, quoteGuid,preventivoName);
     
-    let error = await sendWhatsAppMessage(to, message, fileType, file, template,hotelZone);
-    if (error){
-        return new NextResponse(error.message, { status: 400, headers: corsHeaders });
-    }
+    // let error = await sendWhatsAppMessage(to, message, fileType, file, template,hotelZone);
+    // if (error){
+    //     return new NextResponse(error.message, { status: 400, headers: corsHeaders });
+    // }
 
     let { data: contactsData, error: contactsError } = await supabase
                           .from(DBTables.Contacts)
@@ -88,30 +88,33 @@ export async function POST(request: NextRequest) {
                           .eq('wa_id', to)
                           .single();
     if (contactsError) console.error('Error while fetching contact or contact not in list:', contactsError);
-    let contactInList = contactsData != null;
+    let contactInList = !contactsError && contactsData;
 
-    if (contactInList)
+    //if contact is not in the table, add it
+    if (!contactInList)
     {
-        let { error } = await supabase
-                        .from(DBTables.Contacts)
-                        .update({ last_message_at: new Date() })
-                        .eq('wa_id', to);
-
-        if (error) console.error('Error while updating contact:', error);
-
+        let { error : addContactError} = await supabase
+            .from(DBTables.Contacts)
+            .insert({
+            wa_id: to,
+            profile_name: firstName + " " + lastName
+            })
+        if (addContactError) console.error('Error while adding contact:', addContactError);
     }
-    else
-    {
-        let { error } = await supabase
-                        .from(DBTables.Contacts)
-                        .upsert({
-                        wa_id: to,
-                        profile_name: firstName + " " + lastName,
-                        last_message_at: new Date(),
-                        last_message_received_at: new Date(),
-                        in_chat: true
-                        })
-        if (error) console.error('Error while adding contact:', error);
+
+    let { error: contactLastMessagesError } = await supabase
+            .from(DBTables.ContactsLastMessages)
+            .upsert([{ 
+                wa_id: to, 
+                zone_id: hotelZone, 
+                last_message_at: new Date(),
+                last_message_received_at: new Date(),
+                in_chat: true 
+            }], 
+            { onConflict: 'wa_id, zone_id' });
+
+    if (contactLastMessagesError) {
+        console.error('Error updating contact last message:', contactLastMessagesError);
     }
 
     return new NextResponse('Whatsapp message sent', {

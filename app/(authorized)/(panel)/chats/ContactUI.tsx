@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ContactFE } from "@/types/contact";
+import { ContactFE, ContactInfo } from "@/types/contact";
 import BlankUser from "./BlankUser";
 import { UPDATE_CURRENT_CONTACT, useCurrentContact, useCurrentContactDispatch } from "./CurrentContactContext";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,7 @@ export default function ContactUI(props: { contact: ContactFE }) {
                 <div className="flex flex-row justify-between items-center w-full px-2">
                     <div className="flex items-center gap-">
                         <div className="flex flex-col">
-                            <div>{contact.profile_name}</div>
+                            <div>{contact.wa_id}</div>
                             <div className="text-sm">+{contact.wa_id}</div>
                         </div>
                     </div>
