@@ -60,6 +60,11 @@ export async function POST(request: NextRequest) {
         return new NextResponse('Missing "hotelId" field', { status: 400, headers: corsHeaders });
     }
 
+    const email = reqFormData.get('Email')?.toString();
+    // if (!hotelId) {
+    //     return new NextResponse('Missing "Email" field', { status: 400, headers: corsHeaders });
+    // }
+
     const message = reqFormData.get('message')?.toString();
     const fileType = reqFormData.get('fileType')?.toString();
     const file: File | null = reqFormData.get('file') as File | null;
@@ -109,7 +114,8 @@ export async function POST(request: NextRequest) {
                         profile_name: firstName + " " + lastName,
                         last_message_at: new Date(),
                         last_message_received_at: new Date(),
-                        in_chat: true
+                        in_chat: true,
+                        email: email
                         })
         if (error) console.error('Error while adding contact:', error);
     }
