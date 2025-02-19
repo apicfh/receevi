@@ -61,15 +61,20 @@ export async function POST(request: NextRequest) {
     }
 
     const email = reqFormData.get('Email')?.toString();
-    // if (!hotelId) {
-    //     return new NextResponse('Missing "Email" field', { status: 400, headers: corsHeaders });
-    // }
+    if (!email) {
+        return new NextResponse('Missing "Email" field', { status: 400, headers: corsHeaders });
+    }
+
+    const languageCode = reqFormData.get('LanguageCode')?.toString();
+    if (!languageCode) {
+        return new NextResponse('Missing "LanguageCode" field', { status: 400, headers: corsHeaders });
+    }
 
     const message = reqFormData.get('message')?.toString();
     const fileType = reqFormData.get('fileType')?.toString();
     const file: File | null = reqFormData.get('file') as File | null;
 
-    const languageCode = 'it-IT';
+    //const languageCode = 'it-IT';
 
     let { data: hotelData, error: hotelError } = await supabase
     .from(DBTables.Hotels)
@@ -78,10 +83,10 @@ export async function POST(request: NextRequest) {
     .single();
 
     let hotelZone = hotelData.hotel_zone;
-    let preventivoName = hotelData.template_preventivo_name;
+    let templateName = hotelData.template_preventivo_name;
 
-    let template = await getTemplateRequest(firstName, languageCode, quoteGuid,preventivoName);
-    
+    let template = await getTemplateRequest(firstName, languageCode, quoteGuid,templateName,hotelZone);
+
     let error = await sendWhatsAppMessage(to, message, fileType, file, template,hotelZone);
     if (error){
         return new NextResponse(error.message, { status: 400, headers: corsHeaders });
@@ -136,12 +141,65 @@ function verifyToken(token: string): boolean {
     }
 }
 
-function getTemplateRequest(firstName : string, languageCode:string, quoteGuid: string, preventivoName: string) : TemplateRequest{
+async function checkTemplateLanguage(templateName: string, languageCode:string, hotelZone: number | null){
+
+    const supabase = createClient();
+    let businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID;
+
+    if (hotelZone != null){
+        let { data: hotelZonesData, error: hotelZonesError } = await supabase
+        .from(DBTables.HotelsZones)
+        .select('whatsapp_account_id')
+        .eq('zone_id', hotelZone)
+        .single();
+
+        if (hotelZonesError) {
+            return new Error("Error fetching hotel zone data: " + hotelZonesError);
+        } else if (!hotelZonesData) {
+            return new Error("No matching row found for zone_id " + hotelZone);
+        } else {
+            if (hotelZonesData.whatsapp_account_id != "")
+                {
+                    businessAccountId = hotelZonesData.whatsapp_account_id;
+            }
+            else{
+                return new Error("Hotel zone phone number empty");
+            }
+        }
+    }
+
+    //const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${businessAccountId}/message_templates?fields=name&name=${templateName}`;
+    const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${businessAccountId}/message_templates`;
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`
+    };
+    const res = await fetch(WHATSAPP_API_URL, {
+        method: 'GET',
+        headers
+    });
+    const response = await res.json();
+
+    let templates = response.data.filter((p: { name: string; language: string; }) => p.name == templateName && p.language == languageCode.split("-")[0]);
+
+    let translatedTemplateFound = templates != null && templates.length >= 1;
+    console.log("Template found status: " + translatedTemplateFound);
+
+    return true;
+}
+
+async function getTemplateRequest(firstName : string, languageCode:string, quoteGuid: string, templateName: string, hotelZone: number) : Promise<TemplateRequest>{
+
+    let templateLanguage = "en";
+    let translatedTemplateFound = await checkTemplateLanguage(templateName,languageCode,hotelZone);
+    if (translatedTemplateFound){
+        templateLanguage = languageCode.split("-")[0];
+    }
 
     const templateRequest: TemplateRequest = {
-        name: preventivoName,
+        name: templateName,
         language: {
-            code: languageCode.split("-")[0]
+            code: templateLanguage
         },
         components: [
             {
