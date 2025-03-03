@@ -1,0 +1,7 @@
+#It's not a real documentation but it useful to have a clear ideas of the project's structure
+
+/components --> there are all UI components for the project's layout such as Icons, Design components, ecc...
+/app --> there are the pages and integrations with Supabase authentication
+/app/(authorized) --> there are page for authenticated user's actions like updating password
+/app/(panel) --> is the most important folder if you have to modify the project UI because
+                 it contains the layout of Chats page and Contacts page
