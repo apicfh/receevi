@@ -49,11 +49,9 @@ export default function PanelClient({ children }: { children: ReactNode }) {
     const [selectedHotel, setSelectedHotel] = React.useState("Hotel")
     const [selectedZone, setSelectedZone] = React.useState("Zona Hotel")
     const [selectedOperator, setSelectedOperator] = React.useState("Operatore")
-
-    // Sample data
-    const hotels = ["Grand Hotel", "Hotel Belvedere", "Hotel Paradiso", "Resort Marina"]
     const zones = ["Zona 1", "Zona 2", "Zona 3", "Zona 4"]
     const operators = ["Pasquale Ranieri", "Antonio Ambrosio", "Maria Rossi", "Giuseppe Verdi"]
+    const hotels = ["Mima", "Costa", "Rimini"]
 
     return (
         <div id="page_container" className="flex flex-col h-screen">
@@ -77,7 +75,7 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                                 <DropdownMenuLabel>
                                     <div className="flex flex-col space-y-1">
                                         <p className="text-sm font-medium leading-none">{user?.user_metadata.first_name} {user?.user_metadata.last_name}</p>
-                                        <p className="text-xs leading-none text-white text-muted-foreground">{user?.email}</p>
+                                        <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator/>

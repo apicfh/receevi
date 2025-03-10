@@ -1,7 +1,8 @@
 'use client'
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LoaderCircleIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { LoaderCircleIcon, Search, Menu } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import ContactUI from "./ContactUI";
 import { useContactList } from "./useContactList";
@@ -27,6 +28,14 @@ export default function ChatContactsClient() {
 
     return (
         <div className="h-full flex flex-col gap-2">
+            <Input
+                type="text"
+                placeholder="Cerca"
+                leftIcon={<Menu size={24} className="text-gray-600" />}
+                rightIcon={<Search size={20} className="text-gray-500" />}
+                className="h-10 py-2 text-base border-gray-300 focus:ring-2 focus:ring-blue-500"
+                classNameParent="px-2 pt-2"
+            />
             <Tabs defaultValue="active" className="px-2 pt-2" onValueChange={onTabChange}>
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="active">Active</TabsTrigger>
