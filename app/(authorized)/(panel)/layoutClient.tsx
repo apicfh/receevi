@@ -25,13 +25,76 @@ import UserLetterIcon from "@/components/users/UserLetterIcon";
 import { ChevronDown, CircleUserRound, ContactIcon, LogOut, MessageCircleIcon, RadioIcon, UserRound, UsersIcon } from "lucide-react";
 import Link from 'next/link';
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useCallback, useEffect } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
+
+
+interface Hotel {
+    hotel_name: string;
+    id?: string | number;
+}
+
+interface Zone {
+    zone_name: string;
+    id?: string | number;
+}
+
+interface Operator {
+    full_name: string;
+    id?: string | number;
+}
+
+// Custom hook for fetching data
+function useFetchData(
+    tableName: string,
+    columns: string[]
+): { data: string[], error: string | null } {
+    const [data, setData] = useState<string[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const { query } = useSupabase();
+
+    useEffect(() => {
+        let isMounted = true;
+
+        async function fetchData() {
+            try {
+                const result = await query(
+                    tableName,
+                    'select',
+                    {
+                        columns
+                    }
+                );
+
+                if (!isMounted) return;
+
+                if (result.error) {
+                    throw new Error(result.error.message);
+                }
+
+                setData(result.data || []);
+            } catch (err: any) {
+                if (!isMounted) return;
+                console.error(`Error fetching ${tableName}:`, err.message);
+                setError(err.message);
+            }
+        }
+
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    return { data, error };
+}
 
 export default function PanelClient({ children }: { children: ReactNode }) {
     const activePath = usePathname();
     const { user } = useSupabaseUser();
     const userRole = useUserRole()
     const supabase = useSupabase()
+    const { query } = useSupabase()
     const router = useRouter()
     const logout = useCallback(() => {
         supabase.supabase.auth.signOut().then(() => {
@@ -39,6 +102,7 @@ export default function PanelClient({ children }: { children: ReactNode }) {
             router.push('/login')
         }).catch(console.error);
     }, [router, supabase])
+
     useEffect(() => {
         supabase.supabase.auth.getSession().then(res => {
             if (res.data.session?.access_token) {
@@ -46,12 +110,33 @@ export default function PanelClient({ children }: { children: ReactNode }) {
             }
         })
     }, [supabase])
+
     const [selectedHotel, setSelectedHotel] = React.useState("Hotel")
     const [selectedZone, setSelectedZone] = React.useState("Zona Hotel")
     const [selectedOperator, setSelectedOperator] = React.useState("Operatore")
-    const zones = ["Zona 1", "Zona 2", "Zona 3", "Zona 4"]
-    const operators = ["Pasquale Ranieri", "Antonio Ambrosio", "Maria Rossi", "Giuseppe Verdi"]
-    const hotels = ["Mima", "Costa", "Rimini"]
+
+    let { data: hotelsData } = useFetchData(
+        'hotels',
+        ['hotel_name'],
+        'hotel_name'
+    );
+
+    console.log(hotelsData)
+
+    /*const { data: zonesData } = useFetchData(
+        'zones',
+        ['id', 'zone_name'],
+        'zone_name'
+    );
+
+    const { data: operatorsData } = useFetchData(
+        'operators',
+        ['id', 'full_name'],
+        'full_name'
+    );*/
+
+    const zonesData = ["1", "2"]
+    const operatorsData = ["Pinco Pallo", "Bello Ciccio"]
 
     return (
         <div id="page_container" className="flex flex-col h-screen">
@@ -125,9 +210,9 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                                 <ChevronDown className="h-4 w-4 ml-2" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                {hotels.map((hotel) => (
+                                {hotelsData.map((hotel) => (
                                     <DropdownMenuItem
-                                        key={hotel}
+                                        key={hotel }
                                         onClick={() => setSelectedHotel(hotel)}
                                     >
                                         {hotel}
@@ -143,7 +228,7 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                                 <ChevronDown className="h-4 w-4 ml-2" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                {zones.map((zone) => (
+                                {zonesData.map((zone) => (
                                     <DropdownMenuItem
                                         key={zone}
                                         onClick={() => setSelectedZone(zone)}
@@ -161,7 +246,7 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                                 <ChevronDown className="h-4 w-4 ml-2" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                {operators.map((operator) => (
+                                {operatorsData.map((operator) => (
                                     <DropdownMenuItem
                                         key={operator}
                                         onClick={() => setSelectedOperator(operator)}

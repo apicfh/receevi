@@ -2,12 +2,34 @@
 
 import { createContext, useContext, useState } from 'react'
 import { createClient } from '@/utils/supabase-browser'
+import { queryDatabase } from '@/utils/supabase-query'
 
 import type { Database } from '@/lib/database.types'
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient, PostgrestError } from '@supabase/supabase-js'
+
+type FilterOperation = 'equal' | 'not_equal' | 'greater_than' | 'less_than' | 'like' | 'ilike' | 'in' | 'is' | 'contains';
+
+interface FilterOption {
+    column: string;
+    operation: FilterOperation;
+    value: any;
+}
+
+interface QueryResult<T = any> {
+    data: T | null;
+    error: PostgrestError | Error | null;
+    success: boolean;
+}
 
 type SupabaseContext = {
-    supabase: SupabaseClient<Database>
+    supabase: SupabaseClient<Database>;
+    query: <T = any>(
+        tableName: string,
+        mode: 'insert' | 'select' | 'update' | 'remove',
+        filter?: FilterOption[],
+        data?: Record<string, any>,
+        primaryKey?: { column: string; value: any }
+    ) => Promise<QueryResult<T>>;
 }
 
 const Context = createContext<SupabaseContext | undefined>(undefined)
@@ -15,8 +37,20 @@ const Context = createContext<SupabaseContext | undefined>(undefined)
 export default function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const [supabase] = useState(() => createClient())
 
+    // Create a wrapper for the queryDatabase function that uses the client-side Supabase instance
+    const query = async <T = any>(
+        tableName: string,
+        mode: 'insert' | 'select' | 'update' | 'remove',
+        filter?: FilterOption[],
+        data?: Record<string, any>,
+        primaryKey?: { column: string; value: any }
+    ): Promise<QueryResult<T>> => {
+        // We're passing the client-side Supabase instance to queryDatabase
+        return queryDatabase<T>(supabase, tableName, mode, filter, data, primaryKey);
+    }
+
     return (
-        <Context.Provider value={{ supabase }}>
+        <Context.Provider value={{ supabase, query }}>
             <>{children}</>
         </Context.Provider>
     )
