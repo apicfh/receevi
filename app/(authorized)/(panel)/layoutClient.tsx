@@ -28,25 +28,21 @@ import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 
 
-interface Hotel {
-    hotel_name: string;
-    id?: string | number;
-}
+// Define types for filter operations
+type FilterOperation = 'equal' | 'not_equal' | 'greater_than' | 'less_than' | 'like' | 'ilike' | 'in' | 'is' | 'is_not' | 'contains';
 
-interface Zone {
-    zone_name: string;
-    id?: string | number;
-}
-
-interface Operator {
-    full_name: string;
-    id?: string | number;
+// Define type for filter object
+interface FilterOption {
+    column: string;
+    operation: FilterOperation;
+    value: any;
 }
 
 // Custom hook for fetching data
 function useFetchData(
     tableName: string,
-    columns: string[]
+    columns: string[],
+    filter?: FilterOption[]
 ): { data: string[], error: string | null } {
     const [data, setData] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -60,9 +56,8 @@ function useFetchData(
                 const result = await query(
                     tableName,
                     'select',
-                    {
-                        columns
-                    }
+                    columns,
+                    filter
                 );
 
                 if (!isMounted) return;
@@ -118,7 +113,13 @@ export default function PanelClient({ children }: { children: ReactNode }) {
     let { data: hotelsData } = useFetchData(
         'hotels',
         ['hotel_name'],
-        'hotel_name'
+        [
+            {
+                column: "hotel_name",
+                operation: "is_not",
+                value: null
+            }
+        ]
     );
 
     console.log(hotelsData)
@@ -212,10 +213,10 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                             <DropdownMenuContent>
                                 {hotelsData.map((hotel) => (
                                     <DropdownMenuItem
-                                        key={hotel }
-                                        onClick={() => setSelectedHotel(hotel)}
+                                        key={hotel["hotel_name"]}
+                                        onClick={() => setSelectedHotel(hotel["hotel_name"])}
                                     >
-                                        {hotel}
+                                        {hotel["hotel_name"]}
                                     </DropdownMenuItem>
                                 ))}
                             </DropdownMenuContent>

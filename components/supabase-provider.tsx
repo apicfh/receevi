@@ -7,7 +7,7 @@ import { queryDatabase } from '@/utils/supabase-query'
 import type { Database } from '@/lib/database.types'
 import { SupabaseClient, PostgrestError } from '@supabase/supabase-js'
 
-type FilterOperation = 'equal' | 'not_equal' | 'greater_than' | 'less_than' | 'like' | 'ilike' | 'in' | 'is' | 'contains';
+type FilterOperation = 'equal' | 'not_equal' | 'greater_than' | 'less_than' | 'like' | 'ilike' | 'in' | 'is' | 'is_not' | 'contains';
 
 interface FilterOption {
     column: string;
@@ -26,6 +26,7 @@ type SupabaseContext = {
     query: <T = any>(
         tableName: string,
         mode: 'insert' | 'select' | 'update' | 'remove',
+        columns?: string[],
         filter?: FilterOption[],
         data?: Record<string, any>,
         primaryKey?: { column: string; value: any }
@@ -41,12 +42,23 @@ export default function SupabaseProvider({ children }: { children: React.ReactNo
     const query = async <T = any>(
         tableName: string,
         mode: 'insert' | 'select' | 'update' | 'remove',
+        columns?: string[],
         filter?: FilterOption[],
         data?: Record<string, any>,
         primaryKey?: { column: string; value: any }
     ): Promise<QueryResult<T>> => {
         // We're passing the client-side Supabase instance to queryDatabase
-        return queryDatabase<T>(supabase, tableName, mode, filter, data, primaryKey);
+        return queryDatabase<T>(
+            supabase,
+            tableName,
+            mode,
+            {
+                columns,
+                filter,
+                data,
+                primaryKey
+            }
+            );
     }
 
     return (
