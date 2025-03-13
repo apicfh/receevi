@@ -25,7 +25,7 @@ import UserLetterIcon from "@/components/users/UserLetterIcon";
 import { ChevronDown, CircleUserRound, ContactIcon, LogOut, MessageCircleIcon, RadioIcon, UserRound, UsersIcon } from "lucide-react";
 import Link from 'next/link';
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState, useMemo } from "react";
 
 
 // Define types for filter operations
@@ -41,7 +41,7 @@ interface FilterOption {
 // Custom hook for fetching data
 function useFetchData(
     tableName: string,
-    columns: string[],
+    columns?: string[],
     filter?: FilterOption[]
 ): { data: string[], error: string | null } {
     const [data, setData] = useState<string[]>([]);
@@ -84,6 +84,38 @@ function useFetchData(
     return { data, error };
 }
 
+function useFilteredDropdownData<T>(
+    allData: T[],
+    selectedFilter: string,
+    filterConfig: {
+        defaultText: string;
+        filterBy: (item: T, selectedFilter: string, allData: any[]) => boolean;
+        resetStates?: Array<{
+            setState: React.Dispatch<React.SetStateAction<string>>;
+            defaultValue: string;
+        }>;
+        dependencyArray?: any[];
+    }
+) {
+    // Use memoization to prevent unnecessary re-filtering
+    return useMemo(() => {
+        if (selectedFilter === filterConfig.defaultText) {
+            return allData;
+        } else {
+            return allData.filter(item =>
+                filterConfig.filterBy(item, selectedFilter, allData)
+            );
+        }
+    }, [
+        selectedFilter,
+        allData,
+        filterConfig.defaultText,
+        filterConfig.filterBy,
+        // We don't include resetStates in dependencies as it shouldn't affect filtering
+    ]);
+}
+
+
 export default function PanelClient({ children }: { children: ReactNode }) {
     const activePath = usePathname();
     const { user } = useSupabaseUser();
@@ -110,9 +142,9 @@ export default function PanelClient({ children }: { children: ReactNode }) {
     const [selectedZone, setSelectedZone] = React.useState("Zona Hotel")
     const [selectedOperator, setSelectedOperator] = React.useState("Operatore")
 
-    let { data: hotelsData } = useFetchData(
+    let { data: allHotelsData } = useFetchData(
         'hotels',
-        ['hotel_name'],
+        undefined,
         [
             {
                 column: "hotel_name",
@@ -122,22 +154,50 @@ export default function PanelClient({ children }: { children: ReactNode }) {
         ]
     );
 
-    console.log(hotelsData)
-
-    /*const { data: zonesData } = useFetchData(
-        'zones',
-        ['id', 'zone_name'],
-        'zone_name'
+    let { data: allZonesData } = useFetchData(
+        'hotel_zones',
+        undefined
     );
 
-    const { data: operatorsData } = useFetchData(
-        'operators',
-        ['id', 'full_name'],
-        'full_name'
-    );*/
+    console.log(allZonesData)
+    console.log(selectedZone)
 
-    const zonesData = ["1", "2"]
-    const operatorsData = ["Pinco Pallo", "Bello Ciccio"]
+    const allOperatorsData = ["Pinco Pallo", "Bello Ciccio"]
+
+    // For filtering hotels based on selected zone
+    const filteredHotels = useFilteredDropdownData(
+        allHotelsData,
+        selectedZone,
+        {
+            defaultText: "Zona Hotel",
+            filterBy: (hotel, selectedZone, allZonesData) => {
+                const selectedZoneId = allZonesData.find(hotel => hotel.hotel_zone === selectedZone)?.id;
+                return hotel.hotel_zone === selectedZoneId;
+            },
+            resetStates: [
+                { setState: setSelectedHotel, defaultValue: "Hotel" },
+                { setState: setSelectedOperator, defaultValue: "Operatore" }
+            ],
+            dependencyArray: [allZonesData]
+        }
+    );
+
+// For filtering operators based on selected hotel
+    const filteredOperators = useFilteredDropdownData(
+        allOperatorsData,
+        selectedHotel,
+        {
+            defaultText: "Hotel",
+            filterBy: (operator, selectedHotel, allHotelsData) => {
+                const selectedHotelId = allHotelsData.find(hotel => hotel.hotel_name === selectedHotel)?.id;
+                return operator.hotel_id === selectedHotelId;
+            },
+            resetStates: [
+                { setState: setSelectedOperator, defaultValue: "Operatore" }
+            ],
+            dependencyArray: [allHotelsData]
+        }
+    );
 
     return (
         <div id="page_container" className="flex flex-col h-screen">
@@ -204,14 +264,34 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                     })()}
                 </div>
                 <div id="filter_list" className="flex flex-row items-center gap-4">
-                    <div id="hotel_filter">
+                    <div id="hotelZone_filter">
                         <DropdownMenu>
-                            <DropdownMenuTrigger className="bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32">
-                                <span>{selectedHotel}</span>
-                                <ChevronDown className="h-4 w-4 ml-2" />
+                            <DropdownMenuTrigger
+                                className="bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32">
+                                <span>{selectedZone}</span>
+                                <ChevronDown className="h-4 w-4 ml-2"/>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                {hotelsData.map((hotel) => (
+                                {allZonesData.map((zone) => (
+                                    <DropdownMenuItem
+                                        key={zone["zone_name"]}
+                                        onClick={() => setSelectedZone(zone["zone_name"])}
+                                    >
+                                        {zone["zone_name"]}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <div id="hotel_filter">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
+                                className="bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32">
+                                <span>{selectedHotel}</span>
+                                <ChevronDown className="h-4 w-4 ml-2"/>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {filteredHotels.map((hotel) => (
                                     <DropdownMenuItem
                                         key={hotel["hotel_name"]}
                                         onClick={() => setSelectedHotel(hotel["hotel_name"])}
@@ -222,32 +302,15 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
-                    <div id="hotelZone_filter">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger className="bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32">
-                                <span>{selectedZone}</span>
-                                <ChevronDown className="h-4 w-4 ml-2" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {zonesData.map((zone) => (
-                                    <DropdownMenuItem
-                                        key={zone}
-                                        onClick={() => setSelectedZone(zone)}
-                                    >
-                                        {zone}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
                     <div id="operator_filter">
                         <DropdownMenu>
-                            <DropdownMenuTrigger className="bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32">
+                            <DropdownMenuTrigger
+                                className="bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32">
                                 <span>{selectedOperator}</span>
-                                <ChevronDown className="h-4 w-4 ml-2" />
+                                <ChevronDown className="h-4 w-4 ml-2"/>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                {operatorsData.map((operator) => (
+                                {filteredHotels.map((operator) => (
                                     <DropdownMenuItem
                                         key={operator}
                                         onClick={() => setSelectedOperator(operator)}
