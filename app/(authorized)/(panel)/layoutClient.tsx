@@ -282,7 +282,8 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                     <div id="hotel_filter">
                         <DropdownMenu>
                             <DropdownMenuTrigger
-                                className="bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32">
+                                disabled={selectedZone === "Zona Hotel"}
+                                className="bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32 disabled:bg-gray-400 disabled:text-gray-800">
                                 <span>{selectedHotel}</span>
                                 <ChevronDown className="h-4 w-4 ml-2"/>
                             </DropdownMenuTrigger>
@@ -301,7 +302,8 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                     <div id="operator_filter">
                         <DropdownMenu>
                             <DropdownMenuTrigger
-                                className="disabled bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32">
+                                disabled={selectedHotel === "Hotel"}
+                                className="disabled bg-secondary text-black px-4 py-2 rounded flex items-center justify-between min-w-32 disabled:bg-gray-400 disabled:text-gray-800">
                                 <span>{selectedOperator}</span>
                                 <ChevronDown className="h-4 w-4 ml-2"/>
                             </DropdownMenuTrigger>
