@@ -4,7 +4,7 @@ import React from "react"
 import { useSupabase } from "@/components/supabase-provider";
 import { useSupabaseUser, useUserRole } from "@/components/supabase-user-provider";
 import { Button } from "@/components/ui/button";
-import HotelTag from "@/components/ui/hotelTag";
+import HotelTag from "@/components/ui/tag";
 import {
     DropdownMenu,
     DropdownMenuContent,

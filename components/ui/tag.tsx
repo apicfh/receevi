@@ -5,7 +5,7 @@ import React from 'react';
 type ColorOption = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'pink' | 'indigo' | 'gray' | 'black' | 'white';
 
 // Define the props interface
-interface HotelTagProps {
+interface TagProps {
     name: string;
     color?: ColorOption;
 }
@@ -24,15 +24,18 @@ const colorClasses: Record<ColorOption, string> = {
     white: 'bg-white text-black border border-gray-200',
 };
 
-const HotelTag: React.FC<HotelTagProps> = ({ name, color = 'blue' }) => {
+const Tag: React.FC<TagProps> = (
+    { name, color = 'blue', className }:
+        {name: string, color?: string, className?: string}
+) => {
     // Get the appropriate color class
     const colorClass = colorClasses[color];
 
     return (
-        <span className={`inline-flex items-center justify-center px-3 py-1 text-lg font-medium rounded-lg m-1 shadow-sm ${colorClass}`}>
+        <span className={`inline-flex items-center justify-center px-3 py-1 text-lg font-medium rounded-lg m-1 shadow-sm max-w-fit ${colorClass} ${className}`}>
       {name}
     </span>
     );
 };
 
-export default HotelTag;
+export default Tag;
