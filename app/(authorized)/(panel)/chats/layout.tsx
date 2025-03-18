@@ -3,10 +3,12 @@ import { createClient } from "@/utils/supabase-server";
 import { AgantContextProvider } from "./AgentContext";
 import ChatContactsClient from "./ChatContactsClient";
 import { ContactContextProvider } from "./CurrentContactContext";
+import ContactResume from "@/components/ui/contact-resume";
 
 export default async function ChatsLayout({ children }: {
     children: React.ReactNode;
 }) {
+    //TODO LIST https://claude.ai/share/499a83f9-9e91-44ba-9676-c761c48a5602
     const supabase = createClient();
 
     const { data: allAgentsId } = await supabase.from('user_roles').select('user_id').eq('role', 'agent')
@@ -25,6 +27,7 @@ export default async function ChatsLayout({ children }: {
         }) || []
     }
 
+    let tagList = ["Mima", "Tosi", "Miche", "Rimini"]
     return (
         <ContactContextProvider>
             <AgantContextProvider agents={agents}>
@@ -34,6 +37,7 @@ export default async function ChatsLayout({ children }: {
                             <ChatContactsClient />
                         </div>
                         <div className="flex-grow">
+                            <ContactResume user={{firstName: "Lorenzo", lastName: "Barberi"}} tagList={tagList}/>
                             {children}
                         </div>
                     </div>
