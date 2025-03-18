@@ -36,9 +36,11 @@ export default async function ChatsLayout({ children }: {
                         <div className="w-80 flex-shrink-0">
                             <ChatContactsClient />
                         </div>
-                        <div className="flex-grow">
+                        <div className="flex flex-col flex-grow">
                             <ContactResume user={{firstName: "Lorenzo", lastName: "Barberi"}} tagList={tagList}/>
-                            {children}
+                            <div className="flex flex-row flex-grow border-4 border-blue">
+                                {children}
+                            </div>
                         </div>
                     </div>
                 </div>

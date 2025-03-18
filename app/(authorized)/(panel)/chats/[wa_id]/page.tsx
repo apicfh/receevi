@@ -86,27 +86,35 @@ export default function ContactChat({ params }: { params: { wa_id: string } }) {
     }, [params.wa_id, setMessageTemplateSending])
 
     return (
-        <div className="h-full flex flex-row">
-            <div className="bg-conversation-panel-background h-full relative flex-grow">
+        <div className="flex h-full w-full flex-row overflow-hidden">
+            <div className="bg-conversation-panel-background h-full relative flex-grow flex flex-col">
                 <div className="bg-chat-img h-full w-full absolute bg-[length:412.5px_749.25px] opacity-40"></div>
-                <div className="h-full relative flex flex-col">
+                <div className="h-full w-full relative flex flex-col overflow-hidden rounded-lg">
                     {(() => {
                         if (contact) {
                             return (
-                                <>
-                                    <ChatHeader contact={contact} />
-                                    <MessageListClient from={params.wa_id} />
+                                <div className="flex flex-col h-full">
+                                    <ChatHeader contact={contact}/>
+                                    <div className="flex-grow h-0 min-h-0 max-h-full overflow-y-auto">
+                                        <MessageListClient from={params.wa_id}/>
+                                    </div>
                                     {(() => {
                                         if (typeof isChatWindowOpen !== 'undefined' && typeof contact !== 'undefined') {
                                             if (isChatWindowOpen) {
-                                                return <SendMessageWrapper waId={params.wa_id} />
+                                                return <SendMessageWrapper waId={params.wa_id}/>
                                             } else {
                                                 return (
                                                     <div className="p-4 bg-white flex flex-row gap-4 items-center">
-                                                        <span className="text-sm">You can only send a message within 24 hours of the last customer interaction. Please wait until the customer reaches out to you again or send a template message. <a className="text-blue-500" href="https://developers.facebook.com/docs/whatsapp/cloud-api/guides/send-messages#customer-service-windows" target="_blank" rel="noopener noreferrer">Read more</a></span>
+                                                        <span className="text-sm">You can only send a message within 24 hours of the last customer interaction. Please wait until the customer reaches out to you again or send a template message. <a
+                                                            className="text-blue-500"
+                                                            href="https://developers.facebook.com/docs/whatsapp/cloud-api/guides/send-messages#customer-service-windows"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer">Read more</a></span>
                                                         <TemplateSelection onTemplateSubmit={onTemplateSubmit}>
-                                                            <Button disabled={messageTemplateSending} className="min-w-fit">
-                                                                {messageTemplateSending && <><TWLoader className="w-5 h-5" /> &nbsp;&nbsp; </>}
+                                                            <Button disabled={messageTemplateSending}
+                                                                    className="min-w-fit">
+                                                                {messageTemplateSending && <><TWLoader
+                                                                    className="w-5 h-5"/> &nbsp;&nbsp; </>}
                                                                 Send template message
                                                             </Button>
                                                         </TemplateSelection>
@@ -116,7 +124,7 @@ export default function ContactChat({ params }: { params: { wa_id: string } }) {
                                         }
                                         return <></>
                                     })()}
-                                </>
+                                </div>
                             )
                         } else {
                             return (
