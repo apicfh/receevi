@@ -213,7 +213,7 @@ export default function PanelClient({ children }: { children: ReactNode }) {
                                     }} className="cursor-pointer h-10 w-10"/>
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56">
+                            <DropdownMenuContent className="w-56 mx-4 mt-1">
                                 <DropdownMenuLabel>
                                     <div className="flex flex-col space-y-1">
                                         <p className="text-sm font-medium leading-none">{user?.user_metadata.first_name} {user?.user_metadata.last_name}</p>
