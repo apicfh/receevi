@@ -3,14 +3,20 @@ import { ContactFE } from "@/types/contact";
 import BlankUser from "./BlankUser";
 import { UPDATE_CURRENT_CONTACT, useCurrentContact, useCurrentContactDispatch } from "./CurrentContactContext";
 import { cn } from "@/lib/utils";
+import {Checkbox} from "@/components/ui/checkbox";
 
 export default function ContactUI(props: { contact: ContactFE }) {
     const { contact } = props;
     const currentContact = useCurrentContact()
     const setCurrentContact = useCurrentContactDispatch()
-    return (
+
+    /*
+        Vecchio container di tutto
         <Link href={`/chats/${contact.wa_id}`} onClick={() => { setCurrentContact && setCurrentContact({ type: UPDATE_CURRENT_CONTACT, contact: contact }) }}>
-            <div className={cn("flex flex-row p-2 hover:bg-background-default-hover gap-2 cursor-pointer ", currentContact && currentContact.current?.wa_id === contact.wa_id ? "bg-background-default-hover" : "")}>
+    */
+
+    return (
+            <div className={cn("flex flex-row items-center p-2 hover:bg-background-default-hover gap-2 cursor-pointer ", currentContact && currentContact.current?.wa_id === contact.wa_id ? "bg-background-default-hover" : "")}>
                 <div>
                     <BlankUser className="w-12 h-12" />
                 </div>
@@ -29,12 +35,14 @@ export default function ContactUI(props: { contact: ContactFE }) {
                                 )
                             }
                         })()}
-                        <div>
+                        <div className="flex flex-col items-end justify-between gap-2 h-full">
                             <span className="text-xs text-gray-500">{contact.timeSince}</span>
+                            <span>
+                                <Checkbox/>
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
-        </Link>
     )
 }
