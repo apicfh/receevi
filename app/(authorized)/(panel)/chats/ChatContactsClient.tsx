@@ -38,14 +38,20 @@ export default function ChatContactsClient() {
                     newSelected = [...prev, contactId];
                 } else {
                     newSelected = prev;
+                    // If already selected, don't trigger an event
+                    return newSelected;
                 }
             } else {
                 newSelected = prev.filter(id => id !== contactId);
             }
 
-            // Broadcast the change
+            // Broadcast the change with details about what changed
             const event = new CustomEvent('selectedContactsChanged', {
-                detail: { selectedContacts: newSelected }
+                detail: {
+                    selectedContacts: newSelected,
+                    changedContactId: contactId.toString(),
+                    wasAdded: checked
+                }
             });
             window.dispatchEvent(event);
 
@@ -58,11 +64,15 @@ export default function ChatContactsClient() {
         const handleRemoveContact = (event: CustomEvent) => {
             const { contactId } = event.detail;
             setSelectedContacts(prev => {
-                const newSelected = prev.filter(id => id !== contactId);
+                const newSelected = prev.filter(id => id !== parseInt(contactId));
 
-                // Broadcast the change
+                // Broadcast the change with details
                 const updateEvent = new CustomEvent('selectedContactsChanged', {
-                    detail: { selectedContacts: newSelected }
+                    detail: {
+                        selectedContacts: newSelected,
+                        changedContactId: contactId,
+                        wasAdded: false
+                    }
                 });
                 window.dispatchEvent(updateEvent);
 
@@ -101,10 +111,17 @@ export default function ChatContactsClient() {
                     <button
                         className="text-xs text-blue-700 hover:underline"
                         onClick={() => {
+                            // Get current selected contacts before clearing
+                            const contactsToRemove = [...selectedContacts];
+
                             setSelectedContacts([]);
+
                             // Broadcast the change
                             const event = new CustomEvent('selectedContactsChanged', {
-                                detail: { selectedContacts: [] }
+                                detail: {
+                                    selectedContacts: [],
+                                    // Don't specify a particular contact when clearing all
+                                }
                             });
                             window.dispatchEvent(event);
                         }}

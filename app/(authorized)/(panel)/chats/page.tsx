@@ -11,7 +11,6 @@ export default function MultiChatPage() {
     const router = useRouter();
     const [chatIds, setChatIds] = useState<string[]>([]);
     const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
-    // Use a ref to track if we need to update state to avoid render-phase updates
     const pendingContactUpdate = useRef<string[] | null>(null);
 
     useEffect(() => {
@@ -30,6 +29,8 @@ export default function MultiChatPage() {
         }
 
         setChatIds(ids);
+        // Also update selected contacts to match URL on initial load
+        setSelectedContacts(ids);
 
         // Hide contact resume when showing multiple chats
         if (ids.length > 1) {
@@ -40,39 +41,78 @@ export default function MultiChatPage() {
         }
     }, [searchParams]);
 
-    // Listen for selected contacts from the sidebar - fixed to avoid render phase updates
+    // Listen for selected contacts from the sidebar
     useEffect(() => {
-        // Function to handle the custom event - now just stores data in a ref
         const handleSelectedContactsChanged = (event: CustomEvent) => {
-            const { selectedContacts: contacts } = event.detail;
-            // Store the update in a ref instead of updating state directly
+            const { selectedContacts: contacts, changedContactId, wasAdded } = event.detail;
             pendingContactUpdate.current = contacts;
 
-            // Schedule a state update for the next tick
+            // Schedule state update for the next tick
             setTimeout(() => {
                 if (pendingContactUpdate.current !== null) {
                     setSelectedContacts(pendingContactUpdate.current);
+
+                    // If the changed contact is specified, handle addition or removal
+                    if (changedContactId) {
+                        if (wasAdded && chatIds.length < 3) {
+                            // Add the contact to active chats if not already there
+                            if (!chatIds.includes(changedContactId)) {
+                                const updatedChatIds = [...chatIds, changedContactId].slice(0, 3);
+                                setChatIds(updatedChatIds);
+                                updateUrlWithoutNavigation(updatedChatIds);
+                            }
+                        } else if (!wasAdded) {
+                            // Remove the contact from active chats
+                            const updatedChatIds = chatIds.filter(id => id !== changedContactId);
+                            setChatIds(updatedChatIds);
+                            updateUrlWithoutNavigation(updatedChatIds);
+                        }
+                    } else {
+                        // Just add any new contacts if space is available
+                        if (chatIds.length < 3) {
+                            // Find contacts that aren't already displayed
+                            const newContacts = pendingContactUpdate.current.filter(
+                                id => !chatIds.includes(id)
+                            );
+
+                            if (newContacts.length > 0) {
+                                // Add new contacts up to the limit of 3
+                                const updatedChatIds = [...chatIds, ...newContacts].slice(0, 3);
+                                setChatIds(updatedChatIds);
+                                updateUrlWithoutNavigation(updatedChatIds);
+                            }
+                        }
+                    }
+
                     pendingContactUpdate.current = null;
                 }
             }, 0);
         };
 
-        // Add event listener
         window.addEventListener('selectedContactsChanged',
             handleSelectedContactsChanged as EventListener);
 
-        // Clean up
         return () => {
             window.removeEventListener('selectedContactsChanged',
                 handleSelectedContactsChanged as EventListener);
         };
-    }, []);
+    }, [chatIds]);
 
     // Navigate to the multi-chat view
     const handleViewSelected = () => {
         if (selectedContacts.length > 0) {
-            router.push(`/chats?chats=${selectedContacts.join(',')}`);
+            // Update chatIds directly instead of changing URL
+            setChatIds(selectedContacts);
+            // Optionally update URL without navigation
+            updateUrlWithoutNavigation(selectedContacts);
         }
+    };
+
+    // Update URL without causing navigation/page refresh
+    const updateUrlWithoutNavigation = (contacts: string[]) => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('chats', contacts.join(','));
+        window.history.pushState({}, '', url.toString());
     };
 
     // Remove a contact from selection
@@ -93,16 +133,26 @@ export default function MultiChatPage() {
     // If we have URL parameters, show the multi-chat view
     if (chatIds.length > 0) {
         return (
-            <>
-                {chatIds.map((waId) => (
-                    <div
-                        key={waId}
-                        className={`${chatIds.length > 1 ? 'flex-1' : 'w-full'} h-full flex-shrink-0 overflow-hidden border-r last:border-r-0 border-gray-200`}
-                    >
-                        <ContactChat params={{ wa_id: waId }} />
+            <div className="flex flex-col h-full w-full">
+                {/* Header bar with counter */}
+                <div className="flex justify-between items-center p-2 border-b border-gray-200">
+                    <div className="font-semibold">
+                        Chat attive: {chatIds.length}/3
                     </div>
-                ))}
-            </>
+                </div>
+
+                {/* Chat panels */}
+                <div className="flex flex-1 overflow-hidden">
+                    {chatIds.map((waId) => (
+                        <div
+                            key={waId}
+                            className={`relative ${chatIds.length > 1 ? 'flex-1' : 'w-full'} h-full flex-shrink-0 overflow-hidden border-r last:border-r-0 border-gray-200`}
+                        >
+                            <ContactChat params={{ wa_id: waId }} />
+                        </div>
+                    ))}
+                </div>
+            </div>
         );
     }
 

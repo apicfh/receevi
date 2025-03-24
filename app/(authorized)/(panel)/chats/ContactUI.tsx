@@ -3,7 +3,7 @@ import { ContactFE } from "@/types/contact";
 import BlankUser from "./BlankUser";
 import { UPDATE_CURRENT_CONTACT, useCurrentContact, useCurrentContactDispatch } from "./CurrentContactContext";
 import { cn } from "@/lib/utils";
-import {Checkbox} from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ContactUI(props: {
     contact: ContactFE,
@@ -11,47 +11,65 @@ export default function ContactUI(props: {
     isChecked: boolean
 }) {
     const { contact, onCheckboxChange, isChecked } = props;
-    const currentContact = useCurrentContact()
-    const setCurrentContact = useCurrentContactDispatch()
+    const currentContact = useCurrentContact();
+    const setCurrentContact = useCurrentContactDispatch();
 
     const handleCheckboxChange = (checked: boolean) => {
-        console.log("checked")
         onCheckboxChange(contact.wa_id, checked);
     };
 
-    /*
-        Vecchio container di tutto
-        <Link href={`/chats/${contact.wa_id}`} onClick={() => { setCurrentContact && setCurrentContact({ type: UPDATE_CURRENT_CONTACT, contact: contact }) }}>
-    */
+    const handleContactClick = () => {
+        // When clicking a contact, set it as current
+        if (setCurrentContact) {
+            setCurrentContact({ type: UPDATE_CURRENT_CONTACT, contact: contact });
+        }
+
+        // If not already selected/checked, select it
+        if (!isChecked) {
+            handleCheckboxChange(true);
+        }
+    };
 
     return (
-            <div className={cn("flex flex-row items-center p-2 hover:bg-background-default-hover gap-2 cursor-pointer ", currentContact && currentContact.current?.wa_id === contact.wa_id ? "bg-background-default-hover" : "")}>
-                <div>
-                    <BlankUser className="w-12 h-12" />
-                </div>
-                <div className="flex flex-row justify-between items-center w-full px-2">
-                    <div className="flex items-center gap-">
-                        <div className="flex flex-col">
-                            <div>{contact.profile_name}</div>
-                            <div className="text-sm">+{contact.wa_id}</div>
-                        </div>
+        <div
+            className={cn(
+                "flex flex-row items-center p-2 hover:bg-background-default-hover gap-2 cursor-pointer ",
+                currentContact && currentContact.current?.wa_id === contact.wa_id ? "bg-background-default-hover" : ""
+            )}
+            onClick={handleContactClick}
+        >
+            <div>
+                <BlankUser className="w-12 h-12" />
+            </div>
+            <div className="flex flex-row justify-between items-center w-full px-2">
+                <div className="flex items-center gap-">
+                    <div className="flex flex-col">
+                        <div>{contact.profile_name}</div>
+                        <div className="text-sm">+{contact.wa_id}</div>
                     </div>
-                    <div className="flex flex-col items-end">
-                        {(() => {
-                            if (contact.unread_count && contact.unread_count > 0) {
-                                return (
-                                    <div className="bg-green-500 flex-grow-0 flex-shrink-0 p-2 h-6 w-6 text-white rounded-full text-xs font-bold flex items-center justify-center">{contact.unread_count}</div>
-                                )
-                            }
-                        })()}
-                        <div className="flex flex-col items-end justify-between gap-2 h-full">
-                            <span className="text-xs text-gray-500">{contact.timeSince}</span>
-                            <span>
-                                <Checkbox onCheckedChange={handleCheckboxChange}/>
-                            </span>
-                        </div>
+                </div>
+                <div className="flex flex-col items-end">
+                    {(() => {
+                        if (contact.unread_count && contact.unread_count > 0) {
+                            return (
+                                <div className="bg-green-500 flex-grow-0 flex-shrink-0 p-2 h-6 w-6 text-white rounded-full text-xs font-bold flex items-center justify-center">{contact.unread_count}</div>
+                            )
+                        }
+                    })()}
+                    <div className="flex flex-col items-end justify-between gap-2 h-full">
+                        <span className="text-xs text-gray-500">{contact.timeSince}</span>
+                        <span onClick={(e) => {
+                            // Prevent parent click handler from firing
+                            e.stopPropagation();
+                        }}>
+                            <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={handleCheckboxChange}
+                            />
+                        </span>
                     </div>
                 </div>
             </div>
-    )
+        </div>
+    );
 }
