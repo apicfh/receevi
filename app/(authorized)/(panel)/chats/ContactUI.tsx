@@ -5,10 +5,19 @@ import { UPDATE_CURRENT_CONTACT, useCurrentContact, useCurrentContactDispatch } 
 import { cn } from "@/lib/utils";
 import {Checkbox} from "@/components/ui/checkbox";
 
-export default function ContactUI(props: { contact: ContactFE }) {
-    const { contact } = props;
+export default function ContactUI(props: {
+    contact: ContactFE,
+    onCheckboxChange: (contactId: number, checked: boolean) => void,
+    isChecked: boolean
+}) {
+    const { contact, onCheckboxChange, isChecked } = props;
     const currentContact = useCurrentContact()
     const setCurrentContact = useCurrentContactDispatch()
+
+    const handleCheckboxChange = (checked: boolean) => {
+        console.log("checked")
+        onCheckboxChange(contact.wa_id, checked);
+    };
 
     /*
         Vecchio container di tutto
@@ -38,7 +47,7 @@ export default function ContactUI(props: { contact: ContactFE }) {
                         <div className="flex flex-col items-end justify-between gap-2 h-full">
                             <span className="text-xs text-gray-500">{contact.timeSince}</span>
                             <span>
-                                <Checkbox/>
+                                <Checkbox onCheckedChange={handleCheckboxChange}/>
                             </span>
                         </div>
                     </div>

@@ -3,14 +3,16 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { LoaderCircleIcon, Search, Menu } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ContactUI from "./ContactUI";
 import { useContactList } from "./useContactList";
 
 export default function ChatContactsClient() {
-    const [active, setActive] = useState<boolean>(true)
-    const [contacts, loadMore, isLoading] = useContactList('', active)
+    const [active, setActive] = useState<boolean>(true);
+    const [contacts, loadMore, isLoading] = useContactList('', active);
+    const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
     const chatListRef = useRef<HTMLDivElement>(null);
+
     const onDivScroll = useCallback(async (event: React.UIEvent<HTMLDivElement>) => {
         const current = chatListRef.current;
         if (current) {
@@ -24,7 +26,58 @@ export default function ChatContactsClient() {
 
     const onTabChange = useCallback((value: string) => {
         setActive(value === 'active')
-    }, [setActive])
+    }, [setActive]);
+
+    const handleCheckboxChange = useCallback((contactId: number, checked: boolean) => {
+        setSelectedContacts(prev => {
+            console.log(contactId);
+            let newSelected;
+            if (checked) {
+                // Only add if not already selected and limit to 3
+                if (!prev.includes(contactId) && prev.length < 3) {
+                    newSelected = [...prev, contactId];
+                } else {
+                    newSelected = prev;
+                }
+            } else {
+                newSelected = prev.filter(id => id !== contactId);
+            }
+
+            // Broadcast the change
+            const event = new CustomEvent('selectedContactsChanged', {
+                detail: { selectedContacts: newSelected }
+            });
+            window.dispatchEvent(event);
+
+            return newSelected;
+        });
+    }, []);
+
+    // Listen for remove events from the MultiChatPage
+    useEffect(() => {
+        const handleRemoveContact = (event: CustomEvent) => {
+            const { contactId } = event.detail;
+            setSelectedContacts(prev => {
+                const newSelected = prev.filter(id => id !== contactId);
+
+                // Broadcast the change
+                const updateEvent = new CustomEvent('selectedContactsChanged', {
+                    detail: { selectedContacts: newSelected }
+                });
+                window.dispatchEvent(updateEvent);
+
+                return newSelected;
+            });
+        };
+
+        window.addEventListener('removeSelectedContact',
+            handleRemoveContact as EventListener);
+
+        return () => {
+            window.removeEventListener('removeSelectedContact',
+                handleRemoveContact as EventListener);
+        };
+    }, []);
 
     return (
         <div className="h-full flex flex-col gap-2">
@@ -42,9 +95,34 @@ export default function ChatContactsClient() {
                     <TabsTrigger value="inactive">Inactive</TabsTrigger>
                 </TabsList>
             </Tabs>
+            {selectedContacts.length > 0 && (
+                <div className="px-4 py-2 bg-blue-50 text-blue-700 flex justify-between items-center">
+                    <span>Selezionati: {selectedContacts.length}/3</span>
+                    <button
+                        className="text-xs text-blue-700 hover:underline"
+                        onClick={() => {
+                            setSelectedContacts([]);
+                            // Broadcast the change
+                            const event = new CustomEvent('selectedContactsChanged', {
+                                detail: { selectedContacts: [] }
+                            });
+                            window.dispatchEvent(event);
+                        }}
+                    >
+                        Cancella
+                    </button>
+                </div>
+            )}
             <div className="flex flex-col h-full overflow-y-auto" ref={chatListRef} onScroll={onDivScroll}>
                 {contacts.length > 0 && contacts.map(contact => {
-                    return <ContactUI key={contact.wa_id} contact={contact} />
+                    return (
+                        <ContactUI
+                            key={contact.wa_id}
+                            contact={contact}
+                            onCheckboxChange={handleCheckboxChange}
+                            isChecked={selectedContacts.includes(contact.wa_id)}
+                        />
+                    )
                 })}
                 {contacts.length === 0 && (
                     <div className="p-4 text-center">

@@ -96,20 +96,16 @@ function useFilteredDropdownData<T>(
 ) {
     // Use memoization to prevent unnecessary re-filtering
     return useMemo(() => {
-        console.log("Dati da filtrare:", allData);
         if (selectedFilter === filterConfig.defaultText) {
             return allData;
         } else {
             const extDataId = filterConfig.externalData.find((extItem:any) => extItem[filterConfig.extDataAttribute] === selectedFilter).zone_id;
-
-            console.log("id zona da filtrare:", extDataId);
 
             const filteringFunction = (item: any, id: any) => {
                 return item[filterConfig.dataAttribute] === id;
             }
 
             const lol = allData.filter(item => filteringFunction(item, extDataId));
-            console.log("filtering data:", lol);
             return lol;
         }
     }, [
@@ -164,9 +160,6 @@ export default function PanelClient({ children }: { children: ReactNode }) {
         'hotel_zones',
         undefined
     );
-
-    console.log(allZonesData)
-    console.log("selected:", selectedZone)
 
     const allOperatorsData = ["Pinco Pallo", "Bello Ciccio"]
 

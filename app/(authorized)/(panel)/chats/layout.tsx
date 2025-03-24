@@ -34,7 +34,7 @@ export default async function ChatsLayout({ children }: {
                 <div className="p-4 h-full">
                     <div className="shadow-lg z-20 rounded-xl bg-white flex h-full">
                         <div className="w-80 flex-shrink-0">
-                            <ChatContactsClient />
+                            <ChatContactsClient/>
                         </div>
                         <div className="flex flex-col flex-grow">
                             <ContactResume user={{firstName: "Lorenzo", lastName: "Barberi"}} tagList={tagList}/>
@@ -44,6 +44,27 @@ export default async function ChatsLayout({ children }: {
                         </div>
                     </div>
                 </div>
+                <script dangerouslySetInnerHTML={{
+                    __html: `
+                    (function() {
+                        // Check if we're in multi-chat mode from URL
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const hasMultipleChats = urlParams.has('chats') && urlParams.get('chats').includes(',');
+                        
+                        // Hide contact resume in multi-chat mode
+                        const contactResumeContainer = document.getElementById('contact-resume-container');
+                        if (hasMultipleChats && contactResumeContainer) {
+                            contactResumeContainer.style.display = 'none';
+                        }
+                        
+                        // Listen for changes in selected contacts
+                        window.addEventListener('selectedContactsChanged', function(e) {
+                            const selectedCount = e.detail.selectedContacts.length;
+                            // Update UI based on selected contacts if needed
+                        });
+                    })();
+                    `
+                }}/>
             </AgantContextProvider>
         </ContactContextProvider>
     )
