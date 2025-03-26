@@ -50,7 +50,8 @@ export default function ChatContactsClient() {
                 detail: {
                     selectedContacts: newSelected,
                     changedContactId: contactId.toString(),
-                    wasAdded: checked
+                    wasAdded: checked,
+                    clearAllDisplayed: false
                 }
             });
             window.dispatchEvent(event);
@@ -63,6 +64,7 @@ export default function ChatContactsClient() {
     useEffect(() => {
         const handleRemoveContact = (event: CustomEvent) => {
             const { contactId } = event.detail;
+            console.log("remove")
             setSelectedContacts(prev => {
                 const newSelected = prev.filter(id => id !== parseInt(contactId));
 
@@ -71,7 +73,8 @@ export default function ChatContactsClient() {
                     detail: {
                         selectedContacts: newSelected,
                         changedContactId: contactId,
-                        wasAdded: false
+                        wasAdded: false,
+                        clearAllDisplayed: false
                     }
                 });
                 window.dispatchEvent(updateEvent);
@@ -80,12 +83,38 @@ export default function ChatContactsClient() {
             });
         };
 
+        const handleRemoveAllSelected = (event: CustomEvent) => {
+            setSelectedContacts(() => {
+                const newSelected: number[] = [];
+                console.log("remove all selected")
+
+                // Broadcast the change with details
+                const updateEvent = new CustomEvent('selectedContactsChanged', {
+                    detail: {
+                        selectedContacts: newSelected,
+                        changedContactId: null,
+                        wasAdded: false,
+                        clearAllDisplayed: true
+                    }
+                });
+                window.dispatchEvent(updateEvent);
+
+                return newSelected;
+            });
+        }
+
         window.addEventListener('removeSelectedContact',
             handleRemoveContact as EventListener);
+
+        window.addEventListener('removeAllSelectedContact',
+            handleRemoveAllSelected as EventListener);
 
         return () => {
             window.removeEventListener('removeSelectedContact',
                 handleRemoveContact as EventListener);
+
+            window.removeEventListener('removeAllSelectedContact',
+                handleRemoveAllSelected as EventListener);
         };
     }, []);
 
@@ -120,6 +149,7 @@ export default function ChatContactsClient() {
                             const event = new CustomEvent('selectedContactsChanged', {
                                 detail: {
                                     selectedContacts: [],
+                                    clearAllDisplayed: true,
                                     // Don't specify a particular contact when clearing all
                                 }
                             });

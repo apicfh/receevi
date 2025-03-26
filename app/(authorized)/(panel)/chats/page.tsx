@@ -42,15 +42,25 @@ export default function MultiChatPage() {
     }, [searchParams]);
 
     // Listen for selected contacts from the sidebar
+    // In page.tsx, update the handleSelectedContactsChanged function in the useEffect:
     useEffect(() => {
         const handleSelectedContactsChanged = (event: CustomEvent) => {
-            const { selectedContacts: contacts, changedContactId, wasAdded } = event.detail;
+            const { selectedContacts: contacts, changedContactId, wasAdded, clearAllDisplayed } = event.detail;
             pendingContactUpdate.current = contacts;
 
             // Schedule state update for the next tick
             setTimeout(() => {
                 if (pendingContactUpdate.current !== null) {
                     setSelectedContacts(pendingContactUpdate.current);
+
+                    // Handle the clear all action
+                    if (clearAllDisplayed) {
+                        // Clear all displayed chats
+                        setChatIds([]);
+                        // Update URL without navigation
+                        updateUrlWithoutNavigation([]);
+                        return;
+                    }
 
                     // If the changed contact is specified, handle addition or removal
                     if (changedContactId) {
