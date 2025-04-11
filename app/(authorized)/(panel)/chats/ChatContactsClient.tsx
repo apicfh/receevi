@@ -6,11 +6,21 @@ import { LoaderCircleIcon, Search, Menu } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ContactUI from "./ContactUI";
 import { useContactList } from "./useContactList";
+import { useSelectedContacts, useSelectedContactsDispatch } from "./SelectedContactsContext";
+import {useSearchParams} from "next/navigation";
 
 export default function ChatContactsClient() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     const [active, setActive] = useState<boolean>(true);
+    const searchParams = useSearchParams();
     const [contacts, loadMore, isLoading] = useContactList('', active);
-    const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
+    const selectedContacts = useSelectedContacts();
+    const dispatch = useSelectedContactsDispatch();
     const chatListRef = useRef<HTMLDivElement>(null);
 
     const onDivScroll = useCallback(async (event: React.UIEvent<HTMLDivElement>) => {
@@ -29,102 +39,43 @@ export default function ChatContactsClient() {
     }, [setActive]);
 
     const handleCheckboxChange = useCallback((contactId: number, checked: boolean) => {
-        setSelectedContacts(prev => {
-            console.log(contactId);
-            let newSelected;
-            if (checked) {
-                // Only add if not already selected and limit to 3
-                if (!prev.includes(contactId) && prev.length < 3) {
-                    newSelected = [...prev, contactId];
-                } else {
-                    newSelected = prev;
-                    // If already selected, don't trigger an event
-                    return newSelected;
-                }
-            } else {
-                newSelected = prev.filter(id => id !== contactId);
+        if (checked) {
+            // Add contact if not already selected and limit is not reached
+            if (!selectedContacts.includes(contactId) && selectedContacts.length < 3) {
+                dispatch({ type: 'ADD_CONTACT', contactId });
             }
+        } else {
+            // Remove contact
+            dispatch({ type: 'REMOVE_CONTACT', contactId });
+        }
+    }, [selectedContacts, dispatch]);
 
-            // Broadcast the change with details about what changed
-            const event = new CustomEvent('selectedContactsChanged', {
-                detail: {
-                    selectedContacts: newSelected,
-                    changedContactId: contactId.toString(),
-                    wasAdded: checked,
-                    clearAllDisplayed: false
-                }
-            });
-            window.dispatchEvent(event);
-
-            return newSelected;
-        });
-    }, []);
-
-    // Listen for remove events from the MultiChatPage
+    // Effect to sync with URL params on initial load
     useEffect(() => {
-        const handleRemoveContact = (event: CustomEvent) => {
-            const { contactId } = event.detail;
-            console.log("remove")
-            setSelectedContacts(prev => {
-                const newSelected = prev.filter(id => id !== parseInt(contactId));
+        const chatsParam = searchParams.get('chats');
+        const chatParams = searchParams.getAll('chat');
 
-                // Broadcast the change with details
-                const updateEvent = new CustomEvent('selectedContactsChanged', {
-                    detail: {
-                        selectedContacts: newSelected,
-                        changedContactId: contactId,
-                        wasAdded: false,
-                        clearAllDisplayed: false
-                    }
-                });
-                window.dispatchEvent(updateEvent);
+        let ids: number[] = [];
 
-                return newSelected;
-            });
-        };
-
-        const handleRemoveAllSelected = (event: CustomEvent) => {
-            setSelectedContacts(() => {
-                const newSelected: number[] = [];
-                console.log("remove all selected")
-
-                // Broadcast the change with details
-                const updateEvent = new CustomEvent('selectedContactsChanged', {
-                    detail: {
-                        selectedContacts: newSelected,
-                        changedContactId: null,
-                        wasAdded: false,
-                        clearAllDisplayed: true
-                    }
-                });
-                window.dispatchEvent(updateEvent);
-
-                return newSelected;
-            });
+        if (chatsParam) {
+            ids = chatsParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id)).slice(0, 3);
+        } else if (chatParams.length > 0) {
+            ids = chatParams.map(id => parseInt(id)).filter(id => !isNaN(id)).slice(0, 3);
         }
 
-        window.addEventListener('removeSelectedContact',
-            handleRemoveContact as EventListener);
-
-        window.addEventListener('removeAllSelectedContact',
-            handleRemoveAllSelected as EventListener);
-
-        return () => {
-            window.removeEventListener('removeSelectedContact',
-                handleRemoveContact as EventListener);
-
-            window.removeEventListener('removeAllSelectedContact',
-                handleRemoveAllSelected as EventListener);
-        };
+        if (ids.length > 0) {
+            dispatch({ type: 'SET_CONTACTS', contacts: ids });
+        }
     }, []);
 
+    // Rest of the component remains mostly the same...
     return (
         <div className="h-full flex flex-col gap-2">
             <Input
                 type="text"
                 placeholder="Cerca"
-                leftIcon={<Menu size={24} className="text-gray-600" />}
-                rightIcon={<Search size={20} className="text-gray-500" />}
+                leftIcon={<Menu size={24} className="text-gray-600"/>}
+                rightIcon={<Search size={20} className="text-gray-500"/>}
                 className="h-10 py-2 text-base border-gray-300 focus:ring-2 focus:ring-blue-500"
                 classNameParent="px-2 pt-2"
             />
@@ -134,64 +85,47 @@ export default function ChatContactsClient() {
                     <TabsTrigger value="inactive">Inactive</TabsTrigger>
                 </TabsList>
             </Tabs>
-            {selectedContacts.length > 0 && (
+
+            {/* Only render the selection counter after client-side hydration */}
+            {isClient && selectedContacts.length > 0 && (
                 <div className="px-4 py-2 bg-blue-50 text-blue-700 flex justify-between items-center">
                     <span>Selezionati: {selectedContacts.length}/3</span>
                     <button
                         className="text-xs text-blue-700 hover:underline"
-                        onClick={() => {
-                            // Get current selected contacts before clearing
-                            const contactsToRemove = [...selectedContacts];
-
-                            setSelectedContacts([]);
-
-                            // Broadcast the change
-                            const event = new CustomEvent('selectedContactsChanged', {
-                                detail: {
-                                    selectedContacts: [],
-                                    clearAllDisplayed: true,
-                                    // Don't specify a particular contact when clearing all
-                                }
-                            });
-                            window.dispatchEvent(event);
-                        }}
+                        onClick={() => dispatch({type: 'CLEAR_CONTACTS'})}
                     >
-                        Cancella
+                        Cancella selezionati
                     </button>
                 </div>
             )}
+
             <div className="flex flex-col h-full overflow-y-auto" ref={chatListRef} onScroll={onDivScroll}>
-                {contacts.length > 0 && contacts.map(contact => {
-                    return (
-                        <ContactUI
-                            key={contact.wa_id}
-                            contact={contact}
-                            onCheckboxChange={handleCheckboxChange}
-                            isChecked={selectedContacts.includes(contact.wa_id)}
-                        />
-                    )
+                {isClient && contacts.length > 0 && contacts.map(contact => {
+                    return <ContactUI
+                        key={contact.wa_id}
+                        onCheckboxChange={handleCheckboxChange}
+                        contact={contact}
+                        isChecked={selectedContacts.includes(contact.wa_id)}
+                    />
                 })}
-                {contacts.length === 0 && (
+
+                {/* Only render the empty state message after client-side hydration */}
+                {isClient && contacts.length === 0 && (
                     <div className="p-4 text-center">
-                        {(() => {
-                            if (active) {
-                                return <>
-                                    No active chats at the moment. You&apos;ll see contacts here with an open chat window.
-                                </>
-                            } else {
-                                return <>
-                                    No inactive chats. Contacts whose chat window has expired will appear here.
-                                </>
-                            }
-                        })()}
+                        {active ? (
+                            <>No active chats at the moment. You&apos;ll see contacts here with an open chat window.</>
+                        ) : (
+                            <>No inactive chats. Contacts whose chat window has expired will appear here.</>
+                        )}
                     </div>
                 )}
+
                 {isLoading && (
                     <div className="w-full flex justify-center items-center py-4">
-                        <LoaderCircleIcon className="animate-spin" />
+                        <LoaderCircleIcon className="animate-spin"/>
                     </div>
                 )}
             </div>
         </div>
-    )
+    );
 }
